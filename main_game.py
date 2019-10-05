@@ -61,6 +61,8 @@ while True:
 
     # UPDATE GAME
     game.update_game()
+    player_1.update()
+    player_2.update()
 
     # D R A W
     # map
@@ -76,38 +78,34 @@ while True:
 
     # left screen
     # player in front of friend;
-    p1 = pig_witch
-    p2 = cat_clown
+    p1 = player_1.char.cur_sprite
+    p2 = player_2.char.cur_sprite
     if game.camera_y1 <= game.camera_y2:
-        game.map_screen1.blit(p2.cur_sprite,  # friend sprite
+        game.map_screen1.blit(p2,  # friend sprite
                               (game.camera_x1 - game.camera_x2 + (250 - sprites.new_size/2),
                                game.camera_y1 - game.camera_y2 + (250 - sprites.new_size/2)))
-        game.map_screen1.blit(p1.cur_sprite,  # own sprite
+        game.map_screen1.blit(p1,  # own sprite
                               (250 - sprites.new_size / 2, 250 - sprites.new_size / 2))
     else:
-        game.map_screen1.blit(p1.cur_sprite,  # own sprite
+        game.map_screen1.blit(p1,  # own sprite
                               (250 - sprites.new_size / 2, 250 - sprites.new_size / 2))
-        game.map_screen1.blit(p2.cur_sprite,  # friend sprite
+        game.map_screen1.blit(p2,  # friend sprite
                               (game.camera_x1 - game.camera_x2 + (250 - sprites.new_size / 2),
                                game.camera_y1 - game.camera_y2 + (250 - sprites.new_size / 2)))
 
     # right screen
     if game.camera_y2 <= game.camera_y1:
-        game.map_screen2.blit(p1.cur_sprite,  # friend sprite
+        game.map_screen2.blit(p1,  # friend sprite
                               (game.camera_x2 - game.camera_x1 + (250 - sprites.new_size / 2),
                                game.camera_y2 - game.camera_y1 + (250 - sprites.new_size / 2)))
-        game.map_screen2.blit(p2.cur_sprite,  # own sprite
+        game.map_screen2.blit(p2,  # own sprite
                               (250-sprites.new_size/2, 250-sprites.new_size/2))
     else:
-        game.map_screen2.blit(p2.cur_sprite,  # own sprite
+        game.map_screen2.blit(p2,  # own sprite
                               (250 - sprites.new_size / 2, 250 - sprites.new_size / 2))
-        game.map_screen2.blit(p1.cur_sprite,  # friend sprite
+        game.map_screen2.blit(p1,  # friend sprite
                               (game.camera_x2 - game.camera_x1 + (250 - sprites.new_size / 2),
                                game.camera_y2 - game.camera_y1 + (250 - sprites.new_size / 2)))
-
-    # ANIM. TEST...
-    pig_witch.work_cycle('LEFT')
-    cat_clown.work_cycle('LEFT')
 
     # blit on big screen
     screen.blit(game.map_screen1, (0, 0))

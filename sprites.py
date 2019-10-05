@@ -55,17 +55,50 @@ class Sprites(object):
                 y_spr += 1
         # sprites can be found in self.sprites by calling their key aka group name + number
 
+    def flip_tiles(self, group_name, tiles, flipped_how, starting_number):
+        # parameters: which group name the flipped tiles will be added to (in sprites only); number is enough
+        # list of tile names, and the starting number which is whatever number comes after the last
+        # original group tile
+        # flipped_how is a list as long as tiles, to tell in which ways you want the specific tile to be flipped
+        for x in range(len(tiles)):
+            new_tile = self.sprites[group_name+str(tiles[x])]
+            if flipped_how[x] == 'hor':   # horizontally
+                new_tile = pygame.transform.flip(new_tile, True, False)
+                self.sprites[group_name+str(starting_number)] = new_tile
+                self.big_sprites[group_name + str(starting_number)] = pygame.transform.scale(new_tile,
+                                                                            (self.new_size, self.new_size))
+                starting_number += 1
+
+            if flipped_how[x] == 'ver':   # vertically
+                new_tile = pygame.transform.flip(new_tile, False, True)
+                self.sprites[group_name+str(starting_number)] = new_tile
+                self.big_sprites[group_name + str(starting_number)] = pygame.transform.scale(new_tile,
+                                                                            (self.new_size, self.new_size))
+                starting_number += 1
+
+            if flipped_how[x] == 'both':   # both, at the same time
+                new_tile = pygame.transform.flip(new_tile, True, True)
+                self.sprites[group_name+str(starting_number)] = new_tile
+                self.big_sprites[group_name + str(starting_number)] = pygame.transform.scale(new_tile,
+                                                                            (self.new_size, self.new_size))
+                starting_number += 1
+
 
 sprites = Sprites(32)
 
 # PLAYER SPRITES
 sprites.spritesheet('sprites/player_spr.png', 'playerSPR')      # player sprite-sheet can be called with playerSPR
-sprites.make_group('playerSPR', (0, 0), 'playerSPR', sprites_x=3, sprites_y=2)
+sprites.make_group('playerSPR', (0, 0), 'pig', sprites_y=4)
+sprites.make_group('playerSPR', (1, 0), 'lizard', sprites_y=4)
+sprites.make_group('playerSPR', (2, 0), 'cat', sprites_y=2)
 
 
 # TILES
 sprites.spritesheet('sprites/viiuntiles1.png', 'tilesA')
 sprites.make_group('tilesA', (0, 0), 'groundA', sprites_x=3, sprites_y=2)
+
+sprites.flip_tiles('groundA', [0, 0, 0, 1, 2, 2, 2, 3],
+                   ['hor', 'ver', 'both', 'ver', 'hor', 'ver', 'both', 'hor'], 6)
 
 # OBJECTS - second layer
 sprites.make_group('tilesA', (0, 2), 'objectA', sprites_y=4)

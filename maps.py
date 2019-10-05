@@ -48,7 +48,11 @@ class Maps(object):
         # ground tiles (test version)
         for x in range(size[0]):
             for y in range(size[1]):
-                rand_tile = choice(['0', '1', '2', '3', '4', '4', '4', '5', '5'])
+                ground_tiles = 0
+                for i in sprites.sprites.keys():
+                    if i[:7] == 'groundA':
+                        ground_tiles += 1
+                rand_tile = str(randint(0, ground_tiles-1))
                 the_map.blit(sprites.big_sprites['groundA'+rand_tile], (x*sprites.new_size, y*sprites.new_size))
 
         # object tiles (test version)

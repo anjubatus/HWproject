@@ -5,8 +5,8 @@ class Obj(object):
     def __init__(self, name, base_sprite=None, constant_anim=False, cycle=None):
         self.name = name
         self.sprite = sprites.big_sprites[base_sprite]
-        self.cur_sprite = self.sprite
         self.collision = None
+        self.cur_sprite = self.sprite
 
         self.cycles = {}
         self.constant_anim = constant_anim
@@ -28,22 +28,41 @@ class Obj(object):
 
 
 class Player(object):
-    def __init__(self, character):
+    def __init__(self, character, number):
         self.char = character  # of Obj -type
+        self.number = number   # - is this player 1 or 2
         self.items = {}
 
     def update(self):
-        pass
+        if self.number == 1:
+            dirct = game.p1_move
+        else:
+            dirct = game.p2_move
+        if dirct is not None and dirct in self.char.cycles.keys():
+            self.char.cur_cycle = dirct
+            self.char.work_cycle(dirct)
+        else:
+            self.char.cur_sprite = sprites.big_sprites[self.char.cycles[self.char.cur_cycle][1][0]]
 
 
 # OBJECTS
 
-# players
-pig_witch = Obj('Pig', 'playerSPR0')
-hood_lizard = Obj('Lizard', 'playerSPR1')
-cat_clown = Obj('Cat', 'playerSPR2')
+# player objects
+pig_witch = Obj('Pig', 'pig0', cycle='LEFT')
+hood_lizard = Obj('Lizard', 'lizard0', cycle='LEFT')
+cat_clown = Obj('Cat', 'cat0', cycle='LEFT')
 
 # cycles
-pig_witch.add_cycle('LEFT', ['playerSPR0', 'playerSPR3'])
-hood_lizard.add_cycle('LEFT', ['playerSPR1', 'playerSPR4'])
-cat_clown.add_cycle('LEFT', ['playerSPR2', 'playerSPR5'])
+# move left
+pig_witch.add_cycle('LEFT', ['pig0', 'pig1'])
+hood_lizard.add_cycle('LEFT', ['lizard0', 'lizard1'])
+cat_clown.add_cycle('LEFT', ['cat0', 'cat1'])
+
+# move right
+pig_witch.add_cycle('RIGHT', ['pig2', 'pig3'])
+hood_lizard.add_cycle('RIGHT', ['lizard2', 'lizard3'])
+
+
+# PLAYERS
+player_1 = Player(pig_witch, 1)
+player_2 = Player(hood_lizard, 2)

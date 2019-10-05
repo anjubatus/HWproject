@@ -15,6 +15,9 @@ class Game(object):
     camera_x2 = 0
     camera_y2 = 0
 
+    p1_move = None
+    p2_move = None
+
     # Pressing... keys
     pressing = {'up': False, 'down': False, 'left': False, 'right': False, 'a': False, 'w': False, 's': False,
                 'd': False}
@@ -51,6 +54,12 @@ class Game(object):
         if self.camera_y2 > 250:
             self.camera_y2 = 250
 
+        # check if players are moving
+        if True not in [self.pressing['up'], self.pressing['down'], self.pressing['left'], self.pressing['right']]:
+            self.p2_move = None
+        if True not in [self.pressing['a'], self.pressing['s'], self.pressing['d'], self.pressing['w']]:
+            self.p1_move = None
+
         # Reset needed actions to neutral state
         self.clicked = False
 
@@ -65,7 +74,7 @@ class Game(object):
         else:
             p_specs = {'U': 'up', 'D': 'down', 'L': 'left', 'R': 'right'}
 
-        # check if key is pressed
+        # check if key is pressed -- the player is moving around.
         if pressed:
             self.pressing[name] = True
 
@@ -76,12 +85,24 @@ class Game(object):
                 else:
                     camera_y += 4
 
+                # set player movement to up direction
+                if camera == 1:
+                    self.p1_move = 'UP'
+                else:
+                    self.p2_move = 'UP'
+
             elif name == p_specs['D']:
                 # confirm if moving diagonally; movement should be slower in that case
                 if True in [self.pressing[p_specs['L']], self.pressing[p_specs['R']]]:
                     camera_y -= 3
                 else:
                     camera_y -= 4
+
+                # set player movement to up direction
+                if camera == 1:
+                    self.p1_move = 'DOWN'
+                else:
+                    self.p2_move = 'DOWN'
 
             elif name == p_specs['L']:
                 # confirm if moving diagonally; movement should be slower in that case
@@ -90,13 +111,26 @@ class Game(object):
                 else:
                     camera_x += 4
 
+                # set player movement to up direction
+                if camera == 1:
+                    self.p1_move = 'LEFT'
+                else:
+                    self.p2_move = 'LEFT'
+
             elif name == p_specs['R']:
                 # confirm if moving diagonally; movement should be slower in that case
                 if True in [self.pressing[p_specs['U']], self.pressing[p_specs['D']]]:
                     camera_x -= 3
                 else:
                     camera_x -= 4
+
+                # set player movement to up direction
+                if camera == 1:
+                    self.p1_move = 'RIGHT'
+                else:
+                    self.p2_move = 'RIGHT'
         else:
+            # The player isn't moving in that direction.
             self.pressing[name] = False
 
         if camera == 1:
