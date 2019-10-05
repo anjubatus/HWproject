@@ -16,7 +16,12 @@ class Game(object):
     camera_y2 = 0
 
     # Pressing... keys
-    pressing = {'up': False, 'down': False, 'left': False, 'right': False}
+    pressing = {'up': False, 'down': False, 'left': False, 'right': False, 'a': False, 'w': False, 's': False,
+                'd': False}
+
+    # timer for animation
+    clock = 0
+    timer = False
 
     def __init__(self):
         self.clicked = False
@@ -27,50 +32,79 @@ class Game(object):
     def update_game(self):
         # --- PUT ACTIONS HERE ---
 
+        # clock & timer
+        if self.clock < 6:
+            self.clock += 1
+            self.timer = False
+        else:
+            self.clock = 0
+            self.timer = True
+
+        # game bounds
+        if self.camera_x1 > 250 - 32:
+            self.camera_x1 = 250 - 32
+        if self.camera_y1 > 250:
+            self.camera_y1 = 250
+
+        if self.camera_x2 > 250 - 32:
+            self.camera_x2 = 250 - 32
+        if self.camera_y2 > 250:
+            self.camera_y2 = 250
+
         # Reset needed actions to neutral state
         self.clicked = False
 
     def move_press(self, pressed, name, camera=1):   # name = 'up', 'down', etc
         # determine cameras
-        if camera == 1:
-            camera_x = self.camera_x1
-            camera_y = self.camera_y1
-        else:
-            camera_x = self.camera_x2
-            camera_y = self.camera_y2
+        camera_y = 0
+        camera_x = 0
 
+        if camera == 1:
+            # using player specific keys
+            p_specs = {'U': 'w', 'D': 's', 'L': 'a', 'R': 'd'}
+        else:
+            p_specs = {'U': 'up', 'D': 'down', 'L': 'left', 'R': 'right'}
+
+        # check if key is pressed
         if pressed:
             self.pressing[name] = True
 
-            if name == 'up':
+            if name == p_specs['U']:
                 # confirm if moving diagonally; movement should be slower in that case
-                if True in [self.pressing['left'], self.pressing['right']]:
-                    self.camera_y += 3
+                if True in [self.pressing[p_specs['L']], self.pressing[p_specs['R']]]:
+                    camera_y += 3
                 else:
-                    self.camera_y += 4
+                    camera_y += 4
 
-            elif name == 'down':
+            elif name == p_specs['D']:
                 # confirm if moving diagonally; movement should be slower in that case
-                if True in [self.pressing['left'], self.pressing['right']]:
-                    self.camera_y -= 3
+                if True in [self.pressing[p_specs['L']], self.pressing[p_specs['R']]]:
+                    camera_y -= 3
                 else:
-                    self.camera_y -= 4
+                    camera_y -= 4
 
-            elif name == 'left':
+            elif name == p_specs['L']:
                 # confirm if moving diagonally; movement should be slower in that case
-                if True in [self.pressing['up'], self.pressing['down']]:
-                    self.camera_x += 3
+                if True in [self.pressing[p_specs['U']], self.pressing[p_specs['D']]]:
+                    camera_x += 3
                 else:
-                    self.camera_x += 4
+                    camera_x += 4
 
-            elif name == 'right':
+            elif name == p_specs['R']:
                 # confirm if moving diagonally; movement should be slower in that case
-                if True in [self.pressing['up'], self.pressing['down']]:
-                    self.camera_x -= 3
+                if True in [self.pressing[p_specs['U']], self.pressing[p_specs['D']]]:
+                    camera_x -= 3
                 else:
-                    self.camera_x -= 4
+                    camera_x -= 4
         else:
             self.pressing[name] = False
+
+        if camera == 1:
+            self.camera_x1 += camera_x
+            self.camera_y1 += camera_y
+        else:
+            self.camera_x2 += camera_x
+            self.camera_y2 += camera_y
 
 
 # M O U S E

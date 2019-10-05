@@ -1,4 +1,4 @@
-import pygame
+from game_essentials import *
 
 
 class Sprites(object):
@@ -13,6 +13,8 @@ class Sprites(object):
         self.groups = {}
         self.sprites = {}
         self.big_sprites = {}
+
+        self.cycles = {}  # for animation; includes counter for cur. frame  'name': [counter, [frames]]
 
     def spritesheet(self, a_file, name):
         self.spritesheets[name] = pygame.image.load(a_file)
@@ -34,7 +36,7 @@ class Sprites(object):
         # making the group
         new_group = pygame.Surface((self.size*sprites_x, self.size*sprites_y), pygame.HWSURFACE | pygame.SRCALPHA)
         new_group.blit(self.spritesheets[spritesheet], (0, 0),
-                       (pos[0]*sprites_x*self.size, pos[1]*sprites_y*self.size,
+                       (pos[0]*self.size, pos[1]*self.size,
                         (pos[0]+sprites_x)*self.size, (pos[1]+sprites_y)*self.size))
         self.groups[name] = new_group
 
@@ -58,11 +60,12 @@ sprites = Sprites(32)
 
 # PLAYER SPRITES
 sprites.spritesheet('sprites/player_spr.png', 'playerSPR')      # player sprite-sheet can be called with playerSPR
-sprites.make_group('playerSPR', (0, 0), 'playerSPR', sprites_x=2)
+sprites.make_group('playerSPR', (0, 0), 'playerSPR', sprites_x=3, sprites_y=2)
 
 
 # TILES
 sprites.spritesheet('sprites/viiuntiles1.png', 'tilesA')
 sprites.make_group('tilesA', (0, 0), 'groundA', sprites_x=3, sprites_y=2)
 
-ground = {0: sprites.sprites['groundA0']}
+# OBJECTS - second layer
+sprites.make_group('tilesA', (0, 2), 'objectA', sprites_y=4)
