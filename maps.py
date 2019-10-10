@@ -1,4 +1,4 @@
-from sprites import *
+from objects import *
 from random import choice, randint
 
 
@@ -47,7 +47,7 @@ class Maps(object):
         return new_surf
 
     def new_map(self, name):
-        size = (choice([15, 18, 21, 24]), choice([15, 18, 21, 24]))  # one integer means one tile
+        size = (choice([15, 21, 27]), choice([15, 21, 27]))  # one integer means one tile
 
         # map base surface + layer 2
         the_map = pygame.Surface((size[0]*sprites.new_size, size[1]*sprites.new_size),
@@ -99,7 +99,7 @@ class Maps(object):
         # ground tiles (test version)
         for x in range(size[0]):
             for y in range(size[1]):
-                # in case the ground tiles are wanted to be entirely randomized
+                # in case the ground tiles are wanted to be entirely randomized:
                 """ground_tiles = 0
                 for i in sprites.sprites.keys():
                     if i[:7] == 'groundA':
@@ -122,6 +122,8 @@ class Maps(object):
         # save map
         self.all_maps[name] = [the_map, size]
         self.second_layer[name] = layer_2
+        Game.all_maps[name] = [the_map, size]
+        Game.second_layer[name] = layer_2
 
 
 # MAPS CLASS OBJECT

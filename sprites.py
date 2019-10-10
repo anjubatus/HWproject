@@ -6,8 +6,10 @@ class Sprites(object):
         self.size = original_size  # size of a single original sprite in a spritesheet
         if new_size is None:
             self.new_size = self.size*2
+            Game.sprite_size = self.size*2
         else:
             self.new_size = new_size  # size that the sprites will be transformed to as bigger sprites
+            Game.sprite_size = new_size
         self.spritesheets = {}
         self.images = {}
         self.groups = {}

@@ -42,7 +42,7 @@ while True:
         # MOUSE CLICK
         if event.type == pygame.MOUSEBUTTONDOWN:
             game.clicked = True
-            print game.camera_x1, game.camera_y1
+            print player_1.placement
 
     # MOVEMENT
     pressed = pygame.key.get_pressed()
@@ -73,6 +73,9 @@ while True:
     # right screen
     game.map_screen2.blit(maps.all_maps['base'][0], (game.camera_x2, game.camera_y2))
     game.map_screen2.blit(maps.second_layer['base'], (game.camera_x2, game.camera_y2))
+
+    # ENEMIES
+    enemy_test.update(player_1)
 
     # PLAYERS
 
