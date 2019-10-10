@@ -8,7 +8,10 @@ class Maps(object):
 
     tile_groups = {}
     # tile-groups currently:
-    # straight
+    # updown, leftright
+    # crossleft, crossright, crossup, crossdown, cross
+    # upleft, upright, downleft, downright
+    # deadup, deaddown, deadright, deadleft  (direction means which way is still open)
 
     def __init__(self):
         self.cur_map = None
@@ -44,7 +47,7 @@ class Maps(object):
         return new_surf
 
     def new_map(self, name):
-        size = (choice([12, 15, 18, 21, 24]), choice([12, 15, 18, 21, 24]))  # one integer means one tile
+        size = (choice([15, 18, 21, 24]), choice([15, 18, 21, 24]))  # one integer means one tile
 
         # map base surface + layer 2
         the_map = pygame.Surface((size[0]*sprites.new_size, size[1]*sprites.new_size),
@@ -72,18 +75,18 @@ class Maps(object):
             objects[i] = ['objectA' + choice(['0', '1', '2', '3']), pos]
 
         # ground tile groups
-        ground_spr_group = 'groundA'
+        ground_spr_group = 'ground' + choice(['A', 'B'])
         map_groups = None
         if len(self.tile_groups) > 0:
             map_groups = {}
-            for i in range(5):
+            for i in range(randint(5, (size[0]/3)*(size[1]/3))-4):
                 loop = True
                 pos = (0, 0)
                 while loop:
                     # check if another object has the same position
                     found = False
-                    pos = (randint(0, size[0]-3) * sprites.new_size * 3,
-                           randint(0, size[1]-3) * sprites.new_size * 3)
+                    pos = (randint(0, (size[0]/3)-1) * sprites.new_size*3,
+                           randint(0, (size[1]/3)-1) * sprites.new_size*3)
                     for s in map_groups.values():
                         if pos == s[1]:
                             found = True
@@ -108,10 +111,12 @@ class Maps(object):
                              (x * sprites.new_size, y * sprites.new_size))
         if map_groups is not None:
             for x in map_groups.values():
+                # print 'group blit!', x[1]
                 the_map.blit(self.make_tile_group(x[0], ground_spr_group), x[1])
 
         # objects (test version)
         for x in objects.values():
+            # print 'object blit!'
             layer_2.blit(sprites.big_sprites[x[0]], x[1])
 
         # save map
@@ -123,4 +128,21 @@ class Maps(object):
 maps = Maps()
 
 # TILE GROUPS
-maps.new_tile_group('straight', [3, 4, 13, 3, 4, 13, 3, 4, 13])
+maps.new_tile_group('updown', [3, 4, 13, 3, 4, 13, 3, 4, 13])
+maps.new_tile_group('leftright', [1, 1, 1, 4, 4, 4, 9, 9, 9])
+
+maps.new_tile_group('crossleft', [2, 4, 13, 4, 4, 13, 11, 4, 13])
+maps.new_tile_group('crossright', [3, 4, 10, 3, 4, 4, 3, 4, 12])
+maps.new_tile_group('crossup', [2, 4, 10, 4, 4, 4, 9, 9, 9])
+maps.new_tile_group('crossdown', [1, 1, 1, 4, 4, 4, 11, 4, 12])
+maps.new_tile_group('cross', [2, 4, 10, 4, 4, 4, 11, 4, 12])
+
+maps.new_tile_group('upleft', [2, 4, 13, 4, 4, 13, 9, 9, 8])
+maps.new_tile_group('upright', [3, 4, 10, 3, 4, 4, 7, 9, 9])
+maps.new_tile_group('downleft', [1, 1, 6, 4, 4, 13, 11, 4, 13])
+maps.new_tile_group('downright', [0, 1, 1, 3, 4, 4, 3, 4, 12])
+
+maps.new_tile_group('deadup', [3, 4, 13, 7, 9, 8, 5, 5, 5])
+maps.new_tile_group('deaddown', [5, 5, 5, 0, 1, 6, 3, 4, 13])
+maps.new_tile_group('deadright', [5, 0, 1, 5, 3, 4, 5, 7, 9])
+maps.new_tile_group('deadleft', [1, 6, 5, 4, 13, 5, 9, 8, 5])

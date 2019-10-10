@@ -96,9 +96,11 @@ sprites.make_group('playerSPR', (2, 0), 'cat', sprites_y=2)
 # TILES
 sprites.spritesheet('sprites/viiuntiles1.png', 'tilesA')
 sprites.make_group('tilesA', (0, 0), 'groundA', sprites_x=3, sprites_y=2)
+sprites.make_group('tilesA', (3, 0), 'groundB', sprites_x=3, sprites_y=2)
 
-sprites.flip_tiles('groundA', [0, 0, 0, 1, 2, 2, 2, 3],
-                   ['hor', 'ver', 'both', 'ver', 'hor', 'ver', 'both', 'hor'], 6)
+for l in ['A', 'B']:
+    sprites.flip_tiles('ground'+l, [0, 0, 0, 1, 2, 2, 2, 3],
+                       ['hor', 'ver', 'both', 'ver', 'hor', 'ver', 'both', 'hor'], 6)
 
 # OBJECTS - second layer
 sprites.make_group('tilesA', (0, 2), 'objectA', sprites_y=4)
