@@ -13,6 +13,7 @@ class Sprites(object):
         self.spritesheets = {}
         self.images = {}
         self.groups = {}
+        self.group_sizes = {}
         self.sprites = {}
         self.big_sprites = {}
 
@@ -34,6 +35,7 @@ class Sprites(object):
 
     def make_group(self, spritesheet, pos, name, sprites_x=1, sprites_y=1):  # pos = ex. (2, 3), no single pixels
         # divide sprites on a sprite-sheet into groups of sprites that are easily accessible
+        self.group_sizes[name] = sprites_x * sprites_y
 
         # making the group
         new_group = pygame.Surface((self.size*sprites_x, self.size*sprites_y), pygame.HWSURFACE | pygame.SRCALPHA)
@@ -85,6 +87,9 @@ class Sprites(object):
                                                                             (self.new_size, self.new_size))
                 starting_number += 1
 
+        # update group size
+        self.group_sizes[group_name] += len(tiles)
+
 
 sprites = Sprites(32)
 
@@ -96,7 +101,11 @@ sprites.make_group('playerSPR', (2, 0), 'cat', sprites_y=2)
 
 
 # TILES
-sprites.spritesheet('sprites/viiuntiles1.png', 'tilesA')
+# upload spritesheets
+sprites.spritesheet('sprites/tiles1.png', 'tilesA')
+sprites.spritesheet('sprites/tiles2.png', 'tilesB')
+
+# make groups
 sprites.make_group('tilesA', (0, 0), 'groundA', sprites_x=3, sprites_y=2)
 sprites.make_group('tilesA', (3, 0), 'groundB', sprites_x=3, sprites_y=2)
 
@@ -106,3 +115,6 @@ for l in ['A', 'B']:
 
 # OBJECTS - second layer
 sprites.make_group('tilesA', (0, 2), 'objectA', sprites_y=4)
+
+# gravestones
+sprites.make_group('tilesB', (0, 0), 'objectB', sprites_x=3, sprites_y=3)

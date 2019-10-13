@@ -49,6 +49,13 @@ class Maps(object):
     def new_map(self, name):
         size = (choice([15, 21, 27]), choice([15, 21, 27]))  # one integer means one tile
 
+        # set cameras
+        game.camera_x1 = 0 - (size[0] * sprites.new_size / 2 - (250 - sprites.new_size / 2))
+        game.camera_y1 = 0 - ((size[1] - 1) * sprites.new_size - (250 - sprites.new_size / 2))
+
+        game.camera_x2 = 0 - (size[0] * sprites.new_size / 2 - (250 - sprites.new_size / 2))
+        game.camera_y2 = 0 - ((size[1] - 1) * sprites.new_size - (250 - sprites.new_size / 2))
+
         # map base surface + layer 2
         the_map = pygame.Surface((size[0]*sprites.new_size, size[1]*sprites.new_size),
                                  pygame.HWSURFACE | pygame.SRCALPHA)
@@ -71,8 +78,13 @@ class Maps(object):
                 if not found:
                     # if position is unique, continue
                     loop = False
+            group = choice(['A', 'B'])
+            objects[i] = ['object' + group + str(randint(0, sprites.group_sizes['object'+group]-1)), pos]
 
-            objects[i] = ['objectA' + choice(['0', '1', '2', '3']), pos]
+        # enemies - test version
+        enemy_test = {1: Enemy(pumpkin, placement=[sprites.new_size*randint(-size[0]+1, 0),
+                                                   sprites.new_size*randint(-size[1]+1, 0)]),
+                      2: Enemy(pumpkin, placement=[0, 0])}
 
         # ground tile groups
         ground_spr_group = 'ground' + choice(['A', 'B'])
@@ -120,9 +132,9 @@ class Maps(object):
             layer_2.blit(sprites.big_sprites[x[0]], x[1])
 
         # save map
-        self.all_maps[name] = [the_map, size]
+        self.all_maps[name] = [the_map, size, enemy_test]
         self.second_layer[name] = layer_2
-        Game.all_maps[name] = [the_map, size]
+        Game.all_maps[name] = [the_map, size, enemy_test]
         Game.second_layer[name] = layer_2
 
 

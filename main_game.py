@@ -14,13 +14,12 @@ maps.new_map('base')
 maps.current_map('base')
 print maps.cur_size
 
-
 # CAMERA
-game.camera_x1 = 0 - (maps.cur_size[0]*sprites.new_size/2 - (250 - sprites.new_size/2))
+"""game.camera_x1 = 0 - (maps.cur_size[0]*sprites.new_size/2 - (250 - sprites.new_size/2))
 game.camera_y1 = 0 - ((maps.cur_size[1]-1)*sprites.new_size - (250 - sprites.new_size/2))
 
 game.camera_x2 = 0 - (maps.cur_size[0]*sprites.new_size/2 - (250 - sprites.new_size/2))
-game.camera_y2 = 0 - ((maps.cur_size[1]-1)*sprites.new_size - (250 - sprites.new_size/2))
+game.camera_y2 = 0 - ((maps.cur_size[1]-1)*sprites.new_size - (250 - sprites.new_size/2))"""
 
 
 # START GAME
@@ -43,6 +42,8 @@ while True:
         if event.type == pygame.MOUSEBUTTONDOWN:
             game.clicked = True
             print player_1.placement
+            for x in Enemy.all_enemies.values():
+                print x.placement
 
     # MOVEMENT
     pressed = pygame.key.get_pressed()
@@ -75,7 +76,8 @@ while True:
     game.map_screen2.blit(maps.second_layer['base'], (game.camera_x2, game.camera_y2))
 
     # ENEMIES
-    enemy_test.update(player_1)
+    for x in maps.all_maps['base'][2].values():
+        x.update('players')
 
     # PLAYERS
 
