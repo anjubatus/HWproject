@@ -108,13 +108,13 @@ sprites.spritesheet('sprites/tiles2.png', 'tilesB')
 # make groups
 sprites.make_group('tilesA', (0, 0), 'groundA', sprites_x=3, sprites_y=2)
 sprites.make_group('tilesA', (3, 0), 'groundB', sprites_x=3, sprites_y=2)
+sprites.make_group('tilesB', (0, 4), 'groundC', sprites_x=3, sprites_y=2)
 
-for l in ['A', 'B']:
+for l in ['A', 'B', 'C']:
     sprites.flip_tiles('ground'+l, [0, 0, 0, 1, 2, 2, 2, 3],
                        ['hor', 'ver', 'both', 'ver', 'hor', 'ver', 'both', 'hor'], 6)
 
 # OBJECTS - second layer
 sprites.make_group('tilesA', (0, 2), 'objectA', sprites_y=4)
-
-# gravestones
 sprites.make_group('tilesB', (0, 0), 'objectB', sprites_x=3, sprites_y=3)
+sprites.make_group('tilesB', (4, 4), 'misc', sprites_x=3, sprites_y=2)

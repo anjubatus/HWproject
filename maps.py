@@ -23,8 +23,8 @@ class Maps(object):
         self.cur_name = name
         self.cur_size = self.all_maps[name][1]
 
-    def new_tile_group(self, name, tiles, ratio=(3, 3)):
-        self.tile_groups[name] = [tiles, ratio]
+    def new_tile_group(self, name, tiles, ratio=(3, 3), directions=None):
+        self.tile_groups[name] = [tiles, ratio, directions]
 
     def make_tile_group(self, tile_group, sprite_group):
         # take the predetermined order of things from one of the tile_groups directory and use it on any
@@ -47,7 +47,8 @@ class Maps(object):
         return new_surf
 
     def new_map(self, name):
-        size = (choice([15, 21, 27]), choice([15, 21, 27]))  # one integer means one tile
+        # size = (choice([15, 21, 27]), choice([15, 21, 27]))  # one integer means one tile
+        size = (27, 27)  # if not randomized map size
 
         # set cameras
         game.camera_x1 = 0 - (size[0] * sprites.new_size / 2 - (250 - sprites.new_size / 2))
@@ -78,27 +79,29 @@ class Maps(object):
                 if not found:
                     # if position is unique, continue
                     loop = False
-            group = choice(['A', 'B'])
-            objects[i] = ['object' + group + str(randint(0, sprites.group_sizes['object'+group]-1)), pos]
+            group = choice(['objectB', 'misc'])
+            objects[i] = [group + str(randint(0, sprites.group_sizes[group]-1)), pos]
 
         # enemies - test version
         enemy_test = {1: Enemy(pumpkin, placement=[sprites.new_size*randint(-size[0]+1, 0),
                                                    sprites.new_size*randint(-size[1]+1, 0)]),
-                      2: Enemy(pumpkin, placement=[0, 0])}
+                      2: Enemy(pumpkin, placement=[sprites.new_size*randint(-size[0]+1, 0),
+                                                   sprites.new_size*randint(-size[1]+1, 0)])}
 
-        # ground tile groups
-        ground_spr_group = 'ground' + choice(['A', 'B'])
+        # GROUNDS
+        ground_spr_group = 'ground' + choice(['A', 'B', 'C'])
         map_groups = None
         if len(self.tile_groups) > 0:
             map_groups = {}
-            for i in range(randint(5, (size[0]/3)*(size[1]/3))-4):
+            # path ways
+            for i in range(randint(3, (size[0]/3)*(size[1]/3))/3):
                 loop = True
                 pos = (0, 0)
                 while loop:
                     # check if another object has the same position
                     found = False
-                    pos = (randint(0, (size[0]/3)-1) * sprites.new_size*3,
-                           randint(0, (size[1]/3)-1) * sprites.new_size*3)
+                    pos = (randint(1, (size[0]/3)-2) * sprites.new_size*3,
+                           randint(1, (size[1]/3)-2) * sprites.new_size*3)
                     for s in map_groups.values():
                         if pos == s[1]:
                             found = True
@@ -108,22 +111,42 @@ class Maps(object):
 
                 map_groups[i] = [choice(self.tile_groups.keys()), pos]
 
-        # ground tiles (test version)
-        for x in range(size[0]):
-            for y in range(size[1]):
-                # in case the ground tiles are wanted to be entirely randomized:
-                """ground_tiles = 0
-                for i in sprites.sprites.keys():
-                    if i[:7] == 'groundA':
-                        ground_tiles += 1
-                rand_tile = str(randint(0, ground_tiles-1))
-                the_map.blit(sprites.big_sprites['groundA'+rand_tile], (x*sprites.new_size, y*sprites.new_size))"""
-                # a bas emap of pure grass tiles
-                the_map.blit(sprites.big_sprites[ground_spr_group + '5'],
-                             (x * sprites.new_size, y * sprites.new_size))
-        if map_groups is not None:
+            # grass
+            num = len(map_groups.keys())
+            for x in range(1, (size[0]/3)-1):
+                for y in range(1, (size[1]/3)-1):
+                    found = False
+                    # check if a pathway has the same position
+                    pos = (x*sprites.new_size*3, y*sprites.new_size*3)
+                    for s in map_groups.values():
+                        if pos == s[1]:
+                            found = True
+                    if not found:
+                        map_groups[num] = ['grass', pos]
+                        num += 1
+
+        # ground tiles
+        for x in range(size[0]/3):
+            for y in range(size[1]/3):
+
+                # pre-determined corners of the map
+                if y == 0 or y == size[1]/3 - 1:  # length-wise
+                    if x != size[0]/3/2:
+                        the_map.blit(self.make_tile_group('grass', ground_spr_group),
+                                     (x * sprites.new_size * 3, y * sprites.new_size * 3))
+                    else:
+                        the_map.blit(self.make_tile_group('updown', ground_spr_group),
+                                     (x * sprites.new_size * 3, y * sprites.new_size * 3))
+                if x == 0 or x == size[0]/3 - 1:  # height-wise
+                    if y != size[1]/3/2:
+                        the_map.blit(self.make_tile_group('grass', ground_spr_group),
+                                     (x * sprites.new_size * 3, y * sprites.new_size * 3))
+                    else:
+                        the_map.blit(self.make_tile_group('leftright', ground_spr_group),
+                                     (x * sprites.new_size * 3, y * sprites.new_size * 3))
+
+        if map_groups is not None:  # test version TODO non-test version
             for x in map_groups.values():
-                # print 'group blit!', x[1]
                 the_map.blit(self.make_tile_group(x[0], ground_spr_group), x[1])
 
         # objects (test version)
@@ -142,21 +165,23 @@ class Maps(object):
 maps = Maps()
 
 # TILE GROUPS
-maps.new_tile_group('updown', [3, 4, 13, 3, 4, 13, 3, 4, 13])
-maps.new_tile_group('leftright', [1, 1, 1, 4, 4, 4, 9, 9, 9])
+maps.new_tile_group('updown', [3, 4, 13, 3, 4, 13, 3, 4, 13], directions=['up', 'down'])
+maps.new_tile_group('leftright', [1, 1, 1, 4, 4, 4, 9, 9, 9], directions=['left', 'right'])
 
-maps.new_tile_group('crossleft', [2, 4, 13, 4, 4, 13, 11, 4, 13])
-maps.new_tile_group('crossright', [3, 4, 10, 3, 4, 4, 3, 4, 12])
-maps.new_tile_group('crossup', [2, 4, 10, 4, 4, 4, 9, 9, 9])
-maps.new_tile_group('crossdown', [1, 1, 1, 4, 4, 4, 11, 4, 12])
-maps.new_tile_group('cross', [2, 4, 10, 4, 4, 4, 11, 4, 12])
+maps.new_tile_group('crossleft', [2, 4, 13, 4, 4, 13, 11, 4, 13], directions=['up', 'down', 'left'])
+maps.new_tile_group('crossright', [3, 4, 10, 3, 4, 4, 3, 4, 12], directions=['up', 'down', 'right'])
+maps.new_tile_group('crossup', [2, 4, 10, 4, 4, 4, 9, 9, 9], directions=['up', 'left', 'right'])
+maps.new_tile_group('crossdown', [1, 1, 1, 4, 4, 4, 11, 4, 12], directions=['left', 'right', 'down'])
+maps.new_tile_group('cross', [2, 4, 10, 4, 4, 4, 11, 4, 12], directions=['up', 'down', 'left', 'right'])
 
-maps.new_tile_group('upleft', [2, 4, 13, 4, 4, 13, 9, 9, 8])
-maps.new_tile_group('upright', [3, 4, 10, 3, 4, 4, 7, 9, 9])
-maps.new_tile_group('downleft', [1, 1, 6, 4, 4, 13, 11, 4, 13])
-maps.new_tile_group('downright', [0, 1, 1, 3, 4, 4, 3, 4, 12])
+maps.new_tile_group('upleft', [2, 4, 13, 4, 4, 13, 9, 9, 8], directions=['up', 'left'])
+maps.new_tile_group('upright', [3, 4, 10, 3, 4, 4, 7, 9, 9], directions=['up', 'right'])
+maps.new_tile_group('downleft', [1, 1, 6, 4, 4, 13, 11, 4, 13], directions=['left', 'down'])
+maps.new_tile_group('downright', [0, 1, 1, 3, 4, 4, 3, 4, 12], directions=['right', 'down'])
 
-maps.new_tile_group('deadup', [3, 4, 13, 7, 9, 8, 5, 5, 5])
-maps.new_tile_group('deaddown', [5, 5, 5, 0, 1, 6, 3, 4, 13])
-maps.new_tile_group('deadright', [5, 0, 1, 5, 3, 4, 5, 7, 9])
-maps.new_tile_group('deadleft', [1, 6, 5, 4, 13, 5, 9, 8, 5])
+maps.new_tile_group('deadup', [3, 4, 13, 7, 9, 8, 5, 5, 5], directions=['up'])
+maps.new_tile_group('deaddown', [5, 5, 5, 0, 1, 6, 3, 4, 13], directions=['down'])
+maps.new_tile_group('deadright', [5, 0, 1, 5, 3, 4, 5, 7, 9], directions=['right'])
+maps.new_tile_group('deadleft', [1, 6, 5, 4, 13, 5, 9, 8, 5], directions=['left'])
+
+maps.new_tile_group('grass', [5, 5, 5, 5, 5, 5, 5, 5, 5])

@@ -1,14 +1,14 @@
 from sprites import *
+from random import choice
 
 
 class Obj(object):   # mostly sprite and animation cycle work
-    def __init__(self, name, base_sprite=None, constant_anim=False, cycle=None):
+    def __init__(self, name, base_sprite=None, cycle=None):
         self.name = name
         self.sprite = sprites.big_sprites[base_sprite]
         self.cur_sprite = self.sprite
 
         self.cycles = {}
-        self.constant_anim = constant_anim
         self.cur_cycle = cycle
 
     def add_cycle(self, name, frames):   # for animation
@@ -53,8 +53,8 @@ class Player(object):
 
     def update(self):
         # collision
-        if self.number == 1:
-            pygame.draw.rect(game.map_screen1, (0, 0, 0), self.collision)
+        """if self.number == 1:
+            pygame.draw.rect(game.map_screen1, (0, 0, 0), self.collision)"""
 
         # position/placement
         if self.number == 1:
@@ -77,10 +77,12 @@ class Player(object):
         for i in Enemy.all_enemies.values():
             if self.number == 1:
                 if self.collision.colliderect(i.collision1):
-                    print 'collided!'
+                    if game.timer:
+                        print choice(['p1: ouch!', 'p1: oww!', 'p1: aiie!'])
             else:
                 if self.collision.colliderect(i.collision2):
-                    print 'collided!'
+                    if game.timer:
+                        print choice(['p2: ouch!', 'p2: oww!', 'p2: aiie!'])
 
 
 class Enemy(object):
@@ -114,89 +116,66 @@ class Enemy(object):
                 if diagonal:
                     if self.placement[0] - self.goal[0] < speed:
                         self.placement[0] -= 1
-                        # TODO add collision2 to all movements. also clean up
-                        # how collision works: move -method moves colliding rect the given amount, which is
-                        # negative to the what is added to the placement. The movement of the camera is added later
-                        self.collision1 = self.collision1.move(1, 0)
                     else:
                         self.placement[0] -= speed - 1
-                        self.collision1 = self.collision1.move(speed - 1, 0)
                 else:
                     if self.placement[0] - self.goal[0] < speed:
                         self.placement[0] -= 1
-                        self.collision1 = self.collision1.move(1, 0)
                     else:
                         self.placement[0] -= speed
-                        self.collision1 = self.collision1.move(speed, 0)
 
             elif self.placement[0] < self.goal[0]:  # enemy is to the left of the goal
                 if diagonal:
                     if self.goal[0] - self.placement[0] < speed:
                         self.placement[0] += 1
-                        self.collision1 = self.collision1.move(-1, 0)
                     else:
                         self.placement[0] += speed - 1
-                        self.collision1 = self.collision1.move(-(speed-1), 0)
                 else:
                     if self.goal[0] - self.placement[0] < speed:
                         self.placement[0] += 1
-                        self.collision1 = self.collision1.move(-1, 0)
                     else:
                         self.placement[0] += speed
-                        self.collision1 = self.collision1.move(-speed, 0)
 
             if self.placement[1] > self.goal[1]:  # enemy is below the goal
                 if diagonal:
                     if self.placement[1] - self.goal[1] < speed:
                         self.placement[1] -= 1
-                        self.collision1 = self.collision1.move(0,
-                                                               1 + game.camera_1_move[1])
                     else:
                         self.placement[1] -= speed - 1
-                        self.collision1 = self.collision1.move(0 + game.camera_1_move[0],
-                                                               speed - 1 + game.camera_1_move[1])
                 else:
                     if self.placement[1] - self.goal[1] < speed:
                         self.placement[1] -= 1
-                        self.collision1 = self.collision1.move(0 + game.camera_1_move[0],
-                                                               1 + game.camera_1_move[1])
                     else:
                         self.placement[1] -= speed
-                        self.collision1 = self.collision1.move(0 + game.camera_1_move[0],
-                                                               speed + game.camera_1_move[1])
 
             if self.placement[1] < self.goal[1]:  # enemy is higher than the goal
                 if diagonal:
                     if self.goal[1] - self.placement[1] < speed:
                         self.placement[1] += 1
-                        self.collision1 = self.collision1.move(0 + game.camera_1_move[0],
-                                                               -1 + game.camera_1_move[1])
                     else:
                         self.placement[1] += speed - 1
-                        self.collision1 = self.collision1.move(0 + game.camera_1_move[0],
-                                                               -(speed-1) + game.camera_1_move[1])
                 else:
                     if self.goal[1] - self.placement[1] < speed:
                         self.placement[1] += 1
-                        self.collision1 = self.collision1.move(0 + game.camera_1_move[0],
-                                                               -1 + game.camera_1_move[1])
                     else:
                         self.placement[1] += speed
-                        self.collision1 = self.collision1.move(0 + game.camera_1_move[0],
-                                                               -speed + game.camera_1_move[1])
 
     def update(self, goal='players'):
         # set collision
-        self.collision1 = self.collision1.move(game.camera_1_move[0], game.camera_1_move[1])
-        self.collision2 = self.collision2.move(game.camera_2_move[0], game.camera_2_move[1])
-        pygame.draw.rect(game.map_screen1, (0, 0, 0), self.collision1)
+        self.collision1 = pygame.Rect(game.camera_x1 - self.placement[0],
+                                      game.camera_y1 - self.placement[1],
+                                      sprites.new_size, sprites.new_size)
+        self.collision2 = pygame.Rect(game.camera_x2 - self.placement[0],
+                                      game.camera_y2 - self.placement[1],
+                                      sprites.new_size, sprites.new_size)
+        # pygame.draw.rect(game.map_screen1, (0, 0, 0), self.collision1)
         # pygame.draw.rect(game.map_screen2, (0, 0, 0), self.collision2)
 
         # set goal
         if goal == 'players':
             distance = (0, 0)
             for p in Player.all_players.values():
-                if abs(p.placement[0] - self.placement[0]) < 200 and abs(p.placement[1] - self.placement[1]) < 200:
+                if abs(p.placement[0] - self.placement[0]) < 150 and abs(p.placement[1] - self.placement[1]) < 150:
                     self.goal = p.placement
                     distance = (abs(p.placement[0] - self.placement[0]), abs(p.placement[1] - self.placement[1]))
             if distance is (0, 0):
