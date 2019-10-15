@@ -118,3 +118,7 @@ for l in ['A', 'B', 'C']:
 sprites.make_group('tilesA', (0, 2), 'objectA', sprites_y=4)
 sprites.make_group('tilesB', (0, 0), 'objectB', sprites_x=3, sprites_y=3)
 sprites.make_group('tilesB', (4, 4), 'misc', sprites_x=3, sprites_y=2)
+
+
+# FULL IMAGES
+sprites.image('sprites/titlebg.png', 'title bg')

@@ -39,6 +39,9 @@ class Game(object):
     # sprites
     sprite_size = 0
 
+    # buttons / switches
+    switch = {'cur_mode': 'title screen'}
+
     def __init__(self):
         self.clicked = False
         self.mode = 'two player'

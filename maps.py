@@ -24,7 +24,10 @@ class Maps(object):
         self.cur_size = self.all_maps[name][1]
 
     def new_tile_group(self, name, tiles, ratio=(3, 3), directions=None):
-        self.tile_groups[name] = [tiles, ratio, directions]
+        if directions is not None:
+            self.tile_groups[name] = [tiles, ratio, directions]
+        else:
+            self.tile_groups[name] = [tiles, ratio, [None]]
 
     def make_tile_group(self, tile_group, sprite_group):
         # take the predetermined order of things from one of the tile_groups directory and use it on any
@@ -46,15 +49,62 @@ class Maps(object):
         # return surface
         return new_surf
 
+    def randomize_path(self, map_groups, positions):
+        for i in positions:
+            must_dir = []  # direction must be included
+            no_dir = []  # direction can't be included
+
+            # Checking nearby tiles
+            if str(i[0]) + ':' + str(i[1] - 1) in map_groups.keys():
+                # one tile above directions
+                tile_up = self.tile_groups[map_groups[str(i[0]) + ':' + str(i[1] - 1)][0]][2]
+                if 'down' in tile_up:
+                    must_dir.append('up')
+                else:
+                    no_dir.append('up')
+            if str(i[0]) + ':' + str(i[1] + 1) in map_groups.keys():
+                # one tile below directions
+                tile_down = self.tile_groups[map_groups[str(i[0]) + ':' + str(i[1] + 1)][0]][2]
+                if 'up' in tile_down:
+                    must_dir.append('down')
+                else:
+                    no_dir.append('down')
+            if str(i[0] - 1) + ':' + str(i[1]) in map_groups.keys():
+                # one tile to the left directions
+                tile_left = self.tile_groups[map_groups[str(i[0] - 1) + ':' + str(i[1])][0]][2]
+                if 'right' in tile_left:
+                    must_dir.append('left')
+                else:
+                    no_dir.append('left')
+            if str(i[0] + 1) + ':' + str(i[1]) in map_groups.keys():
+                # one tile to the right directions
+                tile_right = self.tile_groups[map_groups[str(i[0] + 1) + ':' + str(i[1])][0]][2]
+                if 'left' in tile_right:
+                    must_dir.append('right')
+                else:
+                    no_dir.append('right')
+
+            # deciding options
+            avail = []
+            for x in self.tile_groups.keys():
+                if set(must_dir).issubset(self.tile_groups[x][2]) and len(
+                        set(no_dir).intersection(self.tile_groups[x][2])) == 0:
+                    avail.append(x)
+
+            # choosing
+            path = choice(avail)
+            map_groups[str(i[0]) + ':' + str(i[1])] = [path, (i[0] * sprites.new_size * 3,
+                                                              i[1] * sprites.new_size * 3)]
+
     def new_map(self, name):
         # size = (choice([15, 21, 27]), choice([15, 21, 27]))  # one integer means one tile
-        size = (27, 27)  # if not randomized map size
+        size = (27, 21)  # if not randomized map size
 
         # set cameras
-        game.camera_x1 = 0 - (size[0] * sprites.new_size / 2 - (250 - sprites.new_size / 2))
+        game.camera_x1 = 0 - (size[0] * sprites.new_size / 2 - 250)
         game.camera_y1 = 0 - ((size[1] - 1) * sprites.new_size - (250 - sprites.new_size / 2))
 
-        game.camera_x2 = 0 - (size[0] * sprites.new_size / 2 - (250 - sprites.new_size / 2))
+        game.camera_x2 = 0 - (size[0] * sprites.new_size / 2 - 250)
         game.camera_y2 = 0 - ((size[1] - 1) * sprites.new_size - (250 - sprites.new_size / 2))
 
         # map base surface + layer 2
@@ -63,7 +113,7 @@ class Maps(object):
         layer_2 = pygame.Surface((size[0]*sprites.new_size, size[1]*sprites.new_size),
                                  pygame.HWSURFACE | pygame.SRCALPHA)
 
-        # objects
+        # OBJECTS
         object_amount = randint(10, 20)   # how many objects spawn in
         objects = {}
         for i in range(object_amount):
@@ -82,7 +132,7 @@ class Maps(object):
             group = choice(['objectB', 'misc'])
             objects[i] = [group + str(randint(0, sprites.group_sizes[group]-1)), pos]
 
-        # enemies - test version
+        # ENEMIES - test version TODO real enemies
         enemy_test = {1: Enemy(pumpkin, placement=[sprites.new_size*randint(-size[0]+1, 0),
                                                    sprites.new_size*randint(-size[1]+1, 0)]),
                       2: Enemy(pumpkin, placement=[sprites.new_size*randint(-size[0]+1, 0),
@@ -90,9 +140,30 @@ class Maps(object):
 
         # GROUNDS
         ground_spr_group = 'ground' + choice(['A', 'B', 'C'])
-        map_groups = None
+        map_groups = {}
+
+        # pre-determined borders of the map
+        for x in range(size[0] / 3):
+            for y in range(size[1] / 3):
+                if y == 0 or y == size[1] / 3 - 1:  # length-wise
+                    if x != size[0] / 3 / 2:
+                        map_groups[str(x)+':'+str(y)] = ['grass', (x * sprites.new_size * 3, y * sprites.new_size * 3)]
+                        # num += 1
+                    else:
+                        map_groups[str(x)+':'+str(y)] = ['updown', (x * sprites.new_size * 3, y * sprites.new_size * 3)]
+                        # num += 1
+                if x == 0 or x == size[0] / 3 - 1:  # height-wise
+                    if y != size[1] / 3 / 2:
+                        map_groups[str(x)+':'+str(y)] = ['grass', (x * sprites.new_size * 3, y * sprites.new_size * 3)]
+                        # num += 1
+                    else:
+                        map_groups[str(x)+':'+str(y)] = ['leftright', (x * sprites.new_size * 3,
+                                                                       y * sprites.new_size * 3)]
+                        # num += 1
+
+        # RANDOMIZED PATHWAYS
         if len(self.tile_groups) > 0:
-            map_groups = {}
+            """map_groups = {}
             # path ways
             for i in range(randint(3, (size[0]/3)*(size[1]/3))/3):
                 loop = True
@@ -109,10 +180,42 @@ class Maps(object):
                         # if position is unique, continue
                         loop = False
 
-                map_groups[i] = [choice(self.tile_groups.keys()), pos]
+                map_groups[i] = [choice(self.tile_groups.keys()), pos]"""  # old randomized pathways
+
+            # new randomized pathways - first round
+            for i in [(size[0]/3/2, 1), (size[0]/3/2, size[1]/3-2), (1, size[1]/3/2), (size[0]/3-2, size[1]/3/2)]:
+                path = ''
+                if str(i[0])+':'+str(i[1]-1) in map_groups.keys():
+                    path = choice(['updown', 'crossup', 'deadup', 'crossleft', 'crossright', 'cross',
+                                   'upleft', 'upright'])
+                elif str(i[0]-1)+':'+str(i[1]) in map_groups.keys():
+                    path = choice(['leftright', 'crossup', 'crossdown', 'crossleft', 'deadleft', 'cross',
+                                   'upleft', 'downleft'])
+                elif str(i[0])+':'+str(i[1]+1) in map_groups.keys():
+                    path = choice(['updown', 'crossdown', 'crossleft', 'crossright', 'deaddown', 'cross',
+                                   'downleft', 'downright'])
+                elif str(i[0]+1)+':'+str(i[1]) in map_groups.keys():
+                    path = choice(['leftright', 'crossdown', 'crossup', 'crossright', 'deadright', 'cross',
+                                   'downright', 'upright'])
+                map_groups[str(i[0]) + ':' + str(i[1])] = [path, (i[0] * sprites.new_size * 3,
+                                                                  i[1] * sprites.new_size * 3)]
+
+            # second round in randomized pathways
+            secondary = [(size[0]/3/2-1, 1), (size[0]/3/2, 2), (size[0]/3/2+1, 1), (size[0]/3/2-1, size[1]/3-2),
+                         (size[0]/3/2, size[1]/3-3), (size[0]/3/2+1, size[1]/3-2), (1, size[1]/3/2-1),
+                         (1, size[1]/3/2+1), (2, size[1]/3/2), (size[0]/3-3, size[1]/3/2),
+                         (size[0]/3-2, size[1]/3/2-1), (size[0]/3-2, size[1]/3/2+1)]
+            self.randomize_path(map_groups, secondary)
+
+            # third and last round
+            last = []
+            for x in range(1, (size[0]/3)-1):
+                for y in range(1, (size[1]/3)-1):
+                    if str(x)+':'+str(y) not in map_groups.keys():
+                        last.append((x, y))
+            self.randomize_path(map_groups, last)
 
             # grass
-            num = len(map_groups.keys())
             for x in range(1, (size[0]/3)-1):
                 for y in range(1, (size[1]/3)-1):
                     found = False
@@ -122,36 +225,14 @@ class Maps(object):
                         if pos == s[1]:
                             found = True
                     if not found:
-                        map_groups[num] = ['grass', pos]
-                        num += 1
+                        map_groups[str(x)+':'+str(y)] = ['grass', pos]
 
-        # ground tiles
-        for x in range(size[0]/3):
-            for y in range(size[1]/3):
-
-                # pre-determined corners of the map
-                if y == 0 or y == size[1]/3 - 1:  # length-wise
-                    if x != size[0]/3/2:
-                        the_map.blit(self.make_tile_group('grass', ground_spr_group),
-                                     (x * sprites.new_size * 3, y * sprites.new_size * 3))
-                    else:
-                        the_map.blit(self.make_tile_group('updown', ground_spr_group),
-                                     (x * sprites.new_size * 3, y * sprites.new_size * 3))
-                if x == 0 or x == size[0]/3 - 1:  # height-wise
-                    if y != size[1]/3/2:
-                        the_map.blit(self.make_tile_group('grass', ground_spr_group),
-                                     (x * sprites.new_size * 3, y * sprites.new_size * 3))
-                    else:
-                        the_map.blit(self.make_tile_group('leftright', ground_spr_group),
-                                     (x * sprites.new_size * 3, y * sprites.new_size * 3))
-
-        if map_groups is not None:  # test version TODO non-test version
+        if map_groups is not None:  # test version
             for x in map_groups.values():
                 the_map.blit(self.make_tile_group(x[0], ground_spr_group), x[1])
 
         # objects (test version)
         for x in objects.values():
-            # print 'object blit!'
             layer_2.blit(sprites.big_sprites[x[0]], x[1])
 
         # save map
@@ -164,7 +245,7 @@ class Maps(object):
 # MAPS CLASS OBJECT
 maps = Maps()
 
-# TILE GROUPS
+# TILE GROUPS - pathways
 maps.new_tile_group('updown', [3, 4, 13, 3, 4, 13, 3, 4, 13], directions=['up', 'down'])
 maps.new_tile_group('leftright', [1, 1, 1, 4, 4, 4, 9, 9, 9], directions=['left', 'right'])
 
@@ -184,4 +265,8 @@ maps.new_tile_group('deaddown', [5, 5, 5, 0, 1, 6, 3, 4, 13], directions=['down'
 maps.new_tile_group('deadright', [5, 0, 1, 5, 3, 4, 5, 7, 9], directions=['right'])
 maps.new_tile_group('deadleft', [1, 6, 5, 4, 13, 5, 9, 8, 5], directions=['left'])
 
+# grass
 maps.new_tile_group('grass', [5, 5, 5, 5, 5, 5, 5, 5, 5])
+maps.new_tile_group('grass1', [5, 5, 5, 5, 5, 5, 5, 5, 5])
+maps.new_tile_group('grass2', [5, 5, 5, 5, 5, 5, 5, 5, 5])
+maps.new_tile_group('grass3', [5, 5, 5, 5, 5, 5, 5, 5, 5])
