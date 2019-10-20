@@ -33,7 +33,7 @@ class Game(object):
     # maps
     all_maps = {}  # Dictionary of all saved maps, copy from maps class
     second_layer = {}  # dictionary of saved maps' second layer
-    cur_map = 'base'
+    cur_map = 0
     map_size = (0, 0)
 
     # sprites
@@ -59,24 +59,7 @@ class Game(object):
             self.clock = 0
             self.timer = True
 
-        # game bounds
-        if self.camera_x1 > 250 - self.sprite_size/2:
-            self.camera_x1 = 250 - self.sprite_size/2
-        elif self.camera_x1 < (self.all_maps[self.cur_map][1][0]*self.sprite_size)*(-1) + 250 + self.sprite_size/2:
-            self.camera_x1 = (self.all_maps[self.cur_map][1][0]*self.sprite_size)*(-1) + 250 + self.sprite_size/2
-        if self.camera_y1 > 250 - self.sprite_size/2:
-            self.camera_y1 = 250 - self.sprite_size/2
-        elif self.camera_y1 < (self.all_maps[self.cur_map][1][1]*self.sprite_size)*(-1) + 250 + self.sprite_size/2:
-            self.camera_y1 = (self.all_maps[self.cur_map][1][1]*self.sprite_size)*(-1) + 250 + self.sprite_size/2
-
-        if self.camera_x2 > 250 - self.sprite_size/2:
-            self.camera_x2 = 250 - self.sprite_size/2
-        elif self.camera_x2 < (self.all_maps[self.cur_map][1][0]*self.sprite_size)*(-1) + 250 + self.sprite_size/2:
-            self.camera_x2 = (self.all_maps[self.cur_map][1][0]*self.sprite_size)*(-1) + 250 + self.sprite_size/2
-        if self.camera_y2 > 250 - self.sprite_size/2:
-            self.camera_y2 = 250 - self.sprite_size/2
-        elif self.camera_y2 < (self.all_maps[self.cur_map][1][1]*self.sprite_size)*(-1) + 250 + self.sprite_size/2:
-            self.camera_y2 = (self.all_maps[self.cur_map][1][1]*self.sprite_size)*(-1) + 250 + self.sprite_size/2
+        # game bounds moved to maps_update
 
         # check if players are not moving
         if True not in [self.pressing['up'], self.pressing['down'], self.pressing['left'], self.pressing['right']]:

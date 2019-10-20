@@ -3,13 +3,20 @@ from random import choice
 
 
 class Obj(object):   # mostly sprite and animation cycle work
-    def __init__(self, name, base_sprite=None, cycle=None):
+    all_obj = {}
+    hard_obj = []
+
+    def __init__(self, name, base_sprite=None, cycle=None, hard=False):
         self.name = name
         self.sprite = sprites.big_sprites[base_sprite]
         self.cur_sprite = self.sprite
 
         self.cycles = {}
         self.cur_cycle = cycle
+
+        self.all_obj[name] = self
+        if hard:
+            self.hard_obj.append(name)
 
     def add_cycle(self, name, frames):   # for animation
         # name is cycle name, frames is list of frames (in order)
@@ -84,6 +91,17 @@ class Player(object):
                     if game.timer:
                         print choice(['p2: ouch!', 'p2: oww!', 'p2: aiie!'])
 
+        # hard obj collision
+        for i in HardObj.all_hardobj.values():
+            if self.number == 1:
+                if self.collision.colliderect(i.collision1):
+                    if game.timer:
+                        print choice(['p1: going through walls.', 'p1: can\'t go here..', 'p1: i\'ll go anyway!'])
+            else:
+                if self.collision.colliderect(i.collision2):
+                    if game.timer:
+                        print choice(['p1: going through walls.', 'p1: can\'t go here..', 'p1: i\'ll go anyway!'])
+
 
 class Enemy(object):
     all_enemies = {}
@@ -99,7 +117,6 @@ class Enemy(object):
         self.collision2 = pygame.Rect(500 + game.camera_x2 - self.placement[0],
                                       game.camera_y2 - self.placement[1],
                                       sprites.new_size, sprites.new_size)
-        # TODO collision to match cameras, one for each player
 
         # register enemy in class dictionary
         self.all_enemies[len(self.all_enemies)] = self
@@ -187,6 +204,37 @@ class Enemy(object):
                               (game.camera_x2 - self.placement[0], game.camera_y2 - self.placement[1]))
 
 
+class HardObj(object):
+    # an item that doesn't change position, (usually) cant be walked over
+    all_hardobj = {}
+
+    def __init__(self, obj, placement=(0, 0)):
+        self.obj = obj  # of class / type Obj
+        self.placement = placement
+        self.collision1 = pygame.Rect(game.camera_x1 - self.placement[0],
+                                      game.camera_y1 - self.placement[1],
+                                      sprites.new_size, sprites.new_size)
+        self.collision2 = pygame.Rect(500 + game.camera_x2 - self.placement[0],
+                                      game.camera_y2 - self.placement[1],
+                                      sprites.new_size, sprites.new_size)
+        self.all_hardobj[len(self.all_hardobj)] = self
+
+    def update(self):
+        # collision
+        self.collision1 = pygame.Rect(game.camera_x1 - self.placement[0],
+                                      game.camera_y1 - self.placement[1],
+                                      sprites.new_size, sprites.new_size)
+        self.collision2 = pygame.Rect(game.camera_x2 - self.placement[0],
+                                      game.camera_y2 - self.placement[1],
+                                      sprites.new_size, sprites.new_size)
+
+        # draw on screen
+        game.map_screen1.blit(self.obj.sprite,
+                              (game.camera_x1 - self.placement[0], game.camera_y1 - self.placement[1]))
+        game.map_screen2.blit(self.obj.sprite,
+                              (game.camera_x2 - self.placement[0], game.camera_y2 - self.placement[1]))
+
+
 # OBJECTS
 
 # player objects
@@ -196,11 +244,12 @@ cat_clown = Obj('Cat', 'cat0', cycle='LEFT')
 
 # other objects
 pumpkin = Obj('Pumpkin', 'objectA0')
+smile_pumpkin = Obj('Smile Pumpkin', 'misc0', hard=True)
 
 # PLAYERS
 player_1 = Player(pig_witch, 1)
 player_2 = Player(hood_lizard, 2)
-print Player.all_players
+# print Player.all_players
 
 # ENEMIES
 # -- can be found in the maps file

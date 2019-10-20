@@ -20,6 +20,7 @@ class Maps(object):
 
     def current_map(self, name):
         self.cur_map = self.all_maps[name][0]
+        game.cur_map = name
         self.cur_name = name
         self.cur_size = self.all_maps[name][1]
 
@@ -96,16 +97,26 @@ class Maps(object):
             map_groups[str(i[0]) + ':' + str(i[1])] = [path, (i[0] * sprites.new_size * 3,
                                                               i[1] * sprites.new_size * 3)]
 
-    def new_map(self, name):
-        # size = (choice([15, 21, 27]), choice([15, 21, 27]))  # one integer means one tile
-        size = (27, 21)  # if not randomized map size
+    def new_map(self, name, starting_spot):
+        # size of the map
+        size = (choice([21, 27]), choice([21, 27]))
+
+        # the place where the players start on the map
+        if starting_spot == 'down':
+            start_pos = (size[0]/2, size[1] - 2)
+        elif starting_spot == 'up':
+            start_pos = (size[0]/2, 1)
+        elif starting_spot == 'left':
+            start_pos = (1, size[1]/2)
+        else:
+            start_pos = (size[0] - 2, size[1]/2)
 
         # set cameras
-        game.camera_x1 = 0 - (size[0] * sprites.new_size / 2 - 250)
-        game.camera_y1 = 0 - ((size[1] - 1) * sprites.new_size - (250 - sprites.new_size / 2))
+        game.camera_x1 = 0 - (start_pos[0] * sprites.new_size - (250 - sprites.new_size / 2))
+        game.camera_y1 = 0 - (start_pos[1] * sprites.new_size - (250 - sprites.new_size / 2))
 
-        game.camera_x2 = 0 - (size[0] * sprites.new_size / 2 - 250)
-        game.camera_y2 = 0 - ((size[1] - 1) * sprites.new_size - (250 - sprites.new_size / 2))
+        game.camera_x2 = 0 - (start_pos[0] * sprites.new_size - (250 - sprites.new_size / 2))
+        game.camera_y2 = 0 - (start_pos[1] * sprites.new_size - (250 - sprites.new_size / 2))
 
         # map base surface + layer 2
         the_map = pygame.Surface((size[0]*sprites.new_size, size[1]*sprites.new_size),
@@ -122,17 +133,20 @@ class Maps(object):
             while loop:
                 # check if another object has the same position
                 found = False
-                pos = (randint(0, size[0])*sprites.new_size, randint(0, size[1])*sprites.new_size)
+                pos = [sprites.new_size*randint(-size[0]+1, 0), sprites.new_size*randint(-size[1]+1, 0)]
                 for s in objects.values():
-                    if pos == s[1]:
+                    if pos == s.placement:
                         found = True
                 if not found:
                     # if position is unique, continue
                     loop = False
-            group = choice(['objectB', 'misc'])
-            objects[i] = [group + str(randint(0, sprites.group_sizes[group]-1)), pos]
+            # group = choice(['objectB', 'misc'])
+            obj = choice(Obj.hard_obj)
+            # objects[i] = [group + str(randint(0, sprites.group_sizes[group]-1)), pos]
+            objects[i] = HardObj(Obj.all_obj[obj], placement=pos)
 
         # ENEMIES - test version TODO real enemies
+        Enemy.all_enemies.clear()
         enemy_test = {1: Enemy(pumpkin, placement=[sprites.new_size*randint(-size[0]+1, 0),
                                                    sprites.new_size*randint(-size[1]+1, 0)]),
                       2: Enemy(pumpkin, placement=[sprites.new_size*randint(-size[0]+1, 0),
@@ -232,14 +246,49 @@ class Maps(object):
                 the_map.blit(self.make_tile_group(x[0], ground_spr_group), x[1])
 
         # objects (test version)
-        for x in objects.values():
-            layer_2.blit(sprites.big_sprites[x[0]], x[1])
+        """for x in objects.values():
+            layer_2.blit(sprites.big_sprites[x[0]], x[1])"""
 
         # save map
-        self.all_maps[name] = [the_map, size, enemy_test]
+        self.all_maps[name] = [the_map, size, enemy_test, objects]
         self.second_layer[name] = layer_2
-        Game.all_maps[name] = [the_map, size, enemy_test]
+        Game.all_maps[name] = [the_map, size, enemy_test, objects]
         Game.second_layer[name] = layer_2
+
+    def load_map(self, name, starting_spot):
+        pass  # TODO load maps
+
+    def map_update(self):
+        # GAME BOUNDS / MOVING ONTO NEXT MAP
+        if game.camera_x1 > 250 - game.sprite_size / 2:
+            # game.camera_x1 = 250 - game.sprite_size / 2
+            n = randint(1, 10)
+            self.new_map(n, 'right')
+            self.current_map(n)
+        elif game.camera_x1 < (self.all_maps[game.cur_map][1][0] * game.sprite_size)*(-1) + 250 + game.sprite_size / 2:
+            # game.camera_x1 = (self.all_maps[game.cur_map][1][0] * game.sprite_size)*(-1) + 250 + game.sprite_size / 2
+            n = randint(1, 10)
+            self.new_map(n, 'left')
+            self.current_map(n)
+        if game.camera_y1 > 250 - game.sprite_size / 2:
+            # game.camera_y1 = 250 - game.sprite_size / 2
+            n = randint(1, 10)
+            self.new_map(n, 'down')
+            self.current_map(n)
+        elif game.camera_y1 < (self.all_maps[game.cur_map][1][1] * game.sprite_size)*(-1) + 250 + game.sprite_size / 2:
+            # game.camera_y1 = (self.all_maps[game.cur_map][1][1] * game.sprite_size)*(-1) + 250 + game.sprite_size / 2
+            n = randint(1, 10)
+            self.new_map(n, 'up')
+            self.current_map(n)
+
+        if game.camera_x2 > 250 - game.sprite_size / 2:
+            game.camera_x2 = 250 - game.sprite_size / 2
+        elif game.camera_x2 < (self.all_maps[game.cur_map][1][0] * game.sprite_size)*(-1) + 250 + game.sprite_size / 2:
+            game.camera_x2 = (self.all_maps[game.cur_map][1][0] * game.sprite_size) * (-1) + 250 + game.sprite_size / 2
+        if game.camera_y2 > 250 - game.sprite_size / 2:
+            game.camera_y2 = 250 - game.sprite_size / 2
+        elif game.camera_y2 < (self.all_maps[game.cur_map][1][1] * game.sprite_size)*(-1) + 250 + game.sprite_size / 2:
+            game.camera_y2 = (self.all_maps[game.cur_map][1][1] * game.sprite_size) * (-1) + 250 + game.sprite_size / 2
 
 
 # MAPS CLASS OBJECT

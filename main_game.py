@@ -11,9 +11,9 @@ clock = pygame.time.Clock()
 
 
 # base map
-maps.new_map('base')
-maps.current_map('base')
-print maps.cur_size
+maps.new_map(0, 'right')
+maps.current_map(0)
+# print maps.cur_size
 
 
 # START GAME
@@ -35,9 +35,9 @@ while True:
         # MOUSE CLICK
         if event.type == pygame.MOUSEBUTTONDOWN:
             game.clicked = True
-            print player_1.placement
-            for x in Enemy.all_enemies.values():
-                print x.placement
+            # print player_1.placement
+            # for x in Enemy.all_enemies.values():
+            #    print x.placement
 
     if game.switch['cur_mode'] == 'gameplay':   # Game mode is play
         # MOVEMENT
@@ -57,22 +57,27 @@ while True:
 
         # UPDATE GAME
         game.update_game()
+        maps.map_update()
         player_1.update()
         player_2.update()
 
         # D R A W
         # map
         # left screen
-        game.map_screen1.blit(maps.all_maps['base'][0], (game.camera_x1, game.camera_y1))
-        game.map_screen1.blit(maps.second_layer['base'], (game.camera_x1, game.camera_y1))
+        game.map_screen1.blit(maps.all_maps[game.cur_map][0], (game.camera_x1, game.camera_y1))
+        game.map_screen1.blit(maps.second_layer[game.cur_map], (game.camera_x1, game.camera_y1))
 
         # right screen
-        game.map_screen2.blit(maps.all_maps['base'][0], (game.camera_x2, game.camera_y2))
-        game.map_screen2.blit(maps.second_layer['base'], (game.camera_x2, game.camera_y2))
+        game.map_screen2.blit(maps.all_maps[game.cur_map][0], (game.camera_x2, game.camera_y2))
+        game.map_screen2.blit(maps.second_layer[game.cur_map], (game.camera_x2, game.camera_y2))
 
         # ENEMIES
-        for x in maps.all_maps['base'][2].values():
+        for x in maps.all_maps[game.cur_map][2].values():
             x.update('players')
+
+        # HARD OBJECTS
+        for x in maps.all_maps[game.cur_map][3].values():
+            x.update()
 
         # PLAYERS
 
