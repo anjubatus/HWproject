@@ -7,11 +7,6 @@ class Maps(object):
     second_layer = {}   # dictionary of saved maps' second layer
 
     tile_groups = {}
-    # tile-groups currently:
-    # updown, leftright
-    # crossleft, crossright, crossup, crossdown, cross
-    # upleft, upright, downleft, downright
-    # deadup, deaddown, deadright, deadleft  (direction means which way is still open)
 
     def __init__(self):
         self.cur_map = None
@@ -94,6 +89,8 @@ class Maps(object):
 
             # choosing
             path = choice(avail)
+
+            # in general map_groups, the size (str(i[0/1])) is divided by 3 (or whatever the group ratio is)
             map_groups[str(i[0]) + ':' + str(i[1])] = [path, (i[0] * sprites.new_size * 3,
                                                               i[1] * sprites.new_size * 3)]
 
@@ -125,6 +122,7 @@ class Maps(object):
                                  pygame.HWSURFACE | pygame.SRCALPHA)
 
         # OBJECTS
+        HardObj.all_hardobj.clear()
         object_amount = randint(10, 20)   # how many objects spawn in
         objects = {}
         for i in range(object_amount):
@@ -177,25 +175,6 @@ class Maps(object):
 
         # RANDOMIZED PATHWAYS
         if len(self.tile_groups) > 0:
-            """map_groups = {}
-            # path ways
-            for i in range(randint(3, (size[0]/3)*(size[1]/3))/3):
-                loop = True
-                pos = (0, 0)
-                while loop:
-                    # check if another object has the same position
-                    found = False
-                    pos = (randint(1, (size[0]/3)-2) * sprites.new_size*3,
-                           randint(1, (size[1]/3)-2) * sprites.new_size*3)
-                    for s in map_groups.values():
-                        if pos == s[1]:
-                            found = True
-                    if not found:
-                        # if position is unique, continue
-                        loop = False
-
-                map_groups[i] = [choice(self.tile_groups.keys()), pos]"""  # old randomized pathways
-
             # new randomized pathways - first round
             for i in [(size[0]/3/2, 1), (size[0]/3/2, size[1]/3-2), (1, size[1]/3/2), (size[0]/3-2, size[1]/3/2)]:
                 path = ''
@@ -245,14 +224,10 @@ class Maps(object):
             for x in map_groups.values():
                 the_map.blit(self.make_tile_group(x[0], ground_spr_group), x[1])
 
-        # objects (test version)
-        """for x in objects.values():
-            layer_2.blit(sprites.big_sprites[x[0]], x[1])"""
-
         # save map
-        self.all_maps[name] = [the_map, size, enemy_test, objects]
+        self.all_maps[name] = [the_map, size, enemy_test, objects, map_groups]
         self.second_layer[name] = layer_2
-        Game.all_maps[name] = [the_map, size, enemy_test, objects]
+        Game.all_maps[name] = [the_map, size, enemy_test, objects, map_groups]
         Game.second_layer[name] = layer_2
 
     def load_map(self, name, starting_spot):
@@ -289,6 +264,77 @@ class Maps(object):
             game.camera_y2 = 250 - game.sprite_size / 2
         elif game.camera_y2 < (self.all_maps[game.cur_map][1][1] * game.sprite_size)*(-1) + 250 + game.sprite_size / 2:
             game.camera_y2 = (self.all_maps[game.cur_map][1][1] * game.sprite_size) * (-1) + 250 + game.sprite_size / 2
+
+        # COLLISION with ground tiles and hard objects
+        grounds = self.all_maps[game.cur_map][4]  # the 'map groups' dictionary from the making of the map
+        map_cols_1 = {}  # in form = (x, y): [rect1, rect2...]
+        map_cols_2 = {}  # for player 2
+
+        # loop through tile groups, check which ones are nearby, then add individual tile's collision rects
+        # into map_cols
+        for x in grounds.keys():
+            pos = x.split(':')
+            pos = [int(pos[0]), int(pos[1])]
+
+            # PLAYER 1
+            if abs(player_1.on_tile[0] - pos[0]*3) < 4 and abs(player_1.on_tile[1] - pos[1]*3) < 4:
+                t_group = self.tile_groups[grounds[x][0]]
+                tiles = t_group[0]
+                ratio = t_group[1]
+                a = 0  # tile index from tiles
+                for row in range(ratio[1]):
+                    for column in range(ratio[0]):
+                        cur_tile = ((pos[0]*3+column)*sprites.new_size*-1, (pos[1]*3+row)*sprites.new_size*-1)
+                        map_cols_1[cur_tile] = []
+                        for t in sprites.collision[tiles[a]]:
+                            if t is not None:
+                                map_cols_1[cur_tile].append(
+                                    pygame.Rect(game.camera_x1 - (cur_tile[0] - t[0]),
+                                                game.camera_y1 - (cur_tile[1] - t[1]), t[2], t[3]))
+                        a += 1
+            # PLAYER 2
+            if abs(player_2.on_tile[0] - pos[0] * 3) < 4 and abs(player_2.on_tile[1] - pos[1] * 3) < 4:
+                t_group = self.tile_groups[grounds[x][0]]
+                tiles = t_group[0]
+                ratio = t_group[1]
+                a = 0  # tile index from tiles
+                for row in range(ratio[1]):
+                    for column in range(ratio[0]):
+                        cur_tile = (
+                            (pos[0] * 3 + column) * sprites.new_size * -1, (pos[1] * 3 + row) * sprites.new_size * -1)
+                        map_cols_2[cur_tile] = []
+                        for t in sprites.collision[tiles[a]]:
+                            if t is not None:
+                                map_cols_2[cur_tile].append(
+                                    pygame.Rect(game.camera_x2 - (cur_tile[0] - t[0]),
+                                                game.camera_y2 - (cur_tile[1] - t[1]), t[2], t[3]))
+                        a += 1
+
+        # check if PLAYER 1 collides
+        for i in map_cols_1.values():
+            for k in i:
+                # to draw collision blocks:
+                # pygame.draw.rect(game.map_screen1, (0, 0, 0), k)
+                if player_1.collision.colliderect(k):
+                    if game.camera_1_move[0] != 0:  # moving to left or right
+                        game.camera_x1 -= game.camera_1_move[0]
+                        game.camera_1_move[0] = 0
+                    if game.camera_1_move[1] != 0:  # moving up or down
+                        game.camera_y1 -= game.camera_1_move[1]
+                        game.camera_1_move[1] = 0
+
+        # check if PLAYER 2 collides
+        for i in map_cols_2.values():
+            for k in i:
+                # to draw collision blocks:
+                # pygame.draw.rect(game.map_screen1, (0, 0, 0), k)
+                if player_2.collision.colliderect(k):
+                    if game.camera_2_move[0] != 0:  # moving to left or right
+                        game.camera_x2 -= game.camera_2_move[0]
+                        game.camera_2_move[0] = 0
+                    if game.camera_2_move[1] != 0:  # moving up or down
+                        game.camera_y2 -= game.camera_2_move[1]
+                        game.camera_2_move[1] = 0
 
 
 # MAPS CLASS OBJECT

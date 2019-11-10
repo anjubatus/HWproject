@@ -5,11 +5,17 @@ from random import choice
 class Obj(object):   # mostly sprite and animation cycle work
     all_obj = {}
     hard_obj = []
+    enemy_obj = []
+    scnd_layer_obj = []
 
-    def __init__(self, name, base_sprite=None, cycle=None, hard=False):
+    def __init__(self, name, base_sprite=None, cycle=None, hard=False, enemy=False, l2_sprites=None, scnd_layer=False):
         self.name = name
         self.sprite = sprites.big_sprites[base_sprite]
         self.cur_sprite = self.sprite
+        if type(l2_sprites) is dict:
+            self.l2_sprites = l2_sprites  # layer 2 sprites for multi-tile objects in  dict mode: (pos): sprite
+        else:
+            self.l2_sprites = None
 
         self.cycles = {}
         self.cur_cycle = cycle
@@ -17,6 +23,10 @@ class Obj(object):   # mostly sprite and animation cycle work
         self.all_obj[name] = self
         if hard:
             self.hard_obj.append(name)
+        if enemy:
+            self.enemy_obj.append(name)
+        if scnd_layer:
+            self.scnd_layer_obj.append(name)
 
     def add_cycle(self, name, frames):   # for animation
         # name is cycle name, frames is list of frames (in order)
@@ -48,12 +58,11 @@ class Player(object):
             self.placement = (game.camera_x1 - (250 - game.sprite_size/2), game.camera_y1 - (250 - game.sprite_size/2))
         else:
             self.placement = (game.camera_x2 - (250 - game.sprite_size/2), game.camera_y2 - (250 - game.sprite_size/2))
+        self.on_tile = (-self.placement[0]/sprites.new_size, -self.placement[1]/sprites.new_size)
 
         # collision
-        # self.collision = pygame.Rect(self.placement[0], self.placement[1],
-        #                             self.placement[0] + sprites.new_size, self.placement[1] + sprites.new_size)
-        self.collision = pygame.Rect(250 - sprites.new_size / 2, 250 - sprites.new_size / 2,
-                                     sprites.new_size, sprites.new_size)
+        self.collision = pygame.Rect(250 - sprites.new_size / 2 + 20, 250,
+                                     sprites.new_size - 40, sprites.new_size/2-10)
 
         # save player to class dictionary
         self.all_players[number] = self
@@ -68,6 +77,7 @@ class Player(object):
             self.placement = (game.camera_x1 - (250 - game.sprite_size/2), game.camera_y1 - (250 - game.sprite_size/2))
         else:
             self.placement = (game.camera_x2 - (250 - game.sprite_size/2), game.camera_y2 - (250 - game.sprite_size/2))
+        self.on_tile = (-self.placement[0] / sprites.new_size, -self.placement[1] / sprites.new_size)
 
         # Animation cycles and direction
         if self.number == 1:
@@ -95,12 +105,36 @@ class Player(object):
         for i in HardObj.all_hardobj.values():
             if self.number == 1:
                 if self.collision.colliderect(i.collision1):
-                    if game.timer:
-                        print choice(['p1: going through walls.', 'p1: can\'t go here..', 'p1: i\'ll go anyway!'])
+                    """if game.timer:
+                        print choice(['p1: going through walls.', 'p1: can\'t go here..', 'p1: oops, walls!'])"""
+                    if game.camera_1_move[0] > 0:  # moving to left
+                        game.camera_x1 -= game.camera_1_move[0]
+                        game.camera_1_move[0] = 0
+                    if game.camera_1_move[0] < 0:  # moving to right
+                        game.camera_x1 -= game.camera_1_move[0]
+                        game.camera_1_move[0] = 0
+                    if game.camera_1_move[1] > 0:  # moving up
+                        game.camera_y1 -= game.camera_1_move[1]
+                        game.camera_1_move[1] = 0
+                    if game.camera_1_move[1] < 0:  # moving down
+                        game.camera_y1 -= game.camera_1_move[1]
+                        game.camera_1_move[1] = 0
             else:
                 if self.collision.colliderect(i.collision2):
-                    if game.timer:
-                        print choice(['p1: going through walls.', 'p1: can\'t go here..', 'p1: i\'ll go anyway!'])
+                    """if game.timer:
+                        print choice(['p2: going through walls.', 'p2: can\'t go here..', 'p2: oops, walls!'])"""
+                    if game.camera_2_move[0] > 0:  # moving to left
+                        game.camera_x2 -= game.camera_2_move[0]
+                        game.camera_2_move[0] = 0
+                    if game.camera_2_move[0] < 0:  # moving to right
+                        game.camera_x2 -= game.camera_2_move[0]
+                        game.camera_2_move[0] = 0
+                    if game.camera_2_move[1] > 0:  # moving up
+                        game.camera_y2 -= game.camera_2_move[1]
+                        game.camera_2_move[1] = 0
+                    if game.camera_2_move[1] < 0:  # moving down
+                        game.camera_y2 -= game.camera_2_move[1]
+                        game.camera_2_move[1] = 0
 
 
 class Enemy(object):
@@ -243,8 +277,10 @@ hood_lizard = Obj('Lizard', 'lizard0', cycle='LEFT')
 cat_clown = Obj('Cat', 'cat0', cycle='LEFT')
 
 # other objects
-pumpkin = Obj('Pumpkin', 'objectA0')
+pumpkin = Obj('Pumpkin', 'misc1', enemy=True)
 smile_pumpkin = Obj('Smile Pumpkin', 'misc0', hard=True)
+scream_pumpkin = Obj('Scream Pumpkin', 'misc4', hard=True)
+tombstone = Obj('Tombstone', 'misc7', hard=True)
 
 # PLAYERS
 player_1 = Player(pig_witch, 1)

@@ -22,6 +22,10 @@ class Game(object):
     camera_1_move = [0, 0]
     camera_2_move = [0, 0]
 
+    # makes it unable to move in certain direction
+    no_move_1 = {'up': False, 'down': False, 'left': False, 'right': False}
+    no_move_2 = {'up': False, 'down': False, 'left': False, 'right': False}
+
     # Pressing... keys
     pressing = {'up': False, 'down': False, 'left': False, 'right': False, 'a': False, 'w': False, 's': False,
                 'd': False}
@@ -72,6 +76,10 @@ class Game(object):
         # Reset needed actions to neutral state
         self.clicked = False
 
+    def last_update(self):
+        self.camera_2_move = [0, 0]
+        self.camera_1_move = [0, 0]
+
     def move_press(self, pressed, name, camera=1):   # name = 'up', 'down', etc
         # determine cameras
         camera_y = 0
@@ -79,15 +87,22 @@ class Game(object):
 
         if camera == 1:
             # using player specific keys
+            # no_move is a dictionary that tells you if a colliding wall is in certain direction, and can't be
+            # moved towards
+            # no_move = self.no_move_1
             p_specs = {'U': 'w', 'D': 's', 'L': 'a', 'R': 'd'}
         else:
+            # no_move = self.no_move_2
             p_specs = {'U': 'up', 'D': 'down', 'L': 'left', 'R': 'right'}
+
+        """if True in no_move.values():
+            print 'shouldn\'t move now'"""
 
         # check if key is pressed -- the player is moving around.
         if pressed:
             self.pressing[name] = True
-            self.camera_1_move = [0, 0]
-            self.camera_2_move = [0, 0]
+            # self.camera_1_move = [0, 0]
+            # self.camera_2_move = [0, 0]
 
             if name == p_specs['U']:
                 # confirm if moving diagonally; movement should be slower in that case

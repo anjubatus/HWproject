@@ -35,9 +35,9 @@ while True:
         # MOUSE CLICK
         if event.type == pygame.MOUSEBUTTONDOWN:
             game.clicked = True
-            # print player_1.placement
+            print player_1.on_tile, player_1.collision.topleft
             # for x in Enemy.all_enemies.values():
-            #    print x.placement
+            #   print x.placement
 
     if game.switch['cur_mode'] == 'gameplay':   # Game mode is play
         # MOVEMENT
@@ -57,9 +57,9 @@ while True:
 
         # UPDATE GAME
         game.update_game()
-        maps.map_update()
         player_1.update()
         player_2.update()
+        maps.map_update()
 
         # D R A W
         # map
@@ -119,6 +119,9 @@ while True:
     elif game.switch['cur_mode'] == 'title screen':
         title_screen.on_use('this is text', 'This is header 1', 'This is header 2',
                             [['gameplay', (50, 250)]])
+
+    # Last updates
+    game.last_update()
 
     # END FRAME
     clock.tick(30)

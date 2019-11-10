@@ -19,6 +19,8 @@ class Sprites(object):
 
         self.cycles = {}  # for animation; includes counter for cur. frame  'name': [counter, [frames]]
 
+        self.collision = {}  # in form: sprite name: [(x, y, x1, x2)]
+
     def spritesheet(self, a_file, name):
         self.spritesheets[name] = pygame.image.load(a_file)
 
@@ -32,6 +34,11 @@ class Sprites(object):
         new_sprite.blit(self.groups[group_name], (0, 0),
                         (x*self.size, y*self.size, (x+1)*self.size, (y+1)*self.size))
         return new_sprite
+
+    def add_collision(self, name, *rects):
+        self.collision[name] = []
+        for x in rects:
+            self.collision[name].append(x)
 
     def make_group(self, spritesheet, pos, name, sprites_x=1, sprites_y=1):  # pos = ex. (2, 3), no single pixels
         # divide sprites on a sprite-sheet into groups of sprites that are easily accessible
@@ -105,7 +112,7 @@ sprites.make_group('playerSPR', (2, 0), 'cat', sprites_y=2)
 sprites.spritesheet('sprites/tiles1.png', 'tilesA')
 sprites.spritesheet('sprites/tiles2.png', 'tilesB')
 
-# make groups
+# GROUNDS
 sprites.make_group('tilesA', (0, 0), 'groundA', sprites_x=3, sprites_y=2)
 sprites.make_group('tilesA', (3, 0), 'groundB', sprites_x=3, sprites_y=2)
 sprites.make_group('tilesB', (0, 4), 'groundC', sprites_x=3, sprites_y=2)
@@ -114,10 +121,28 @@ for l in ['A', 'B', 'C']:
     sprites.flip_tiles('ground'+l, [0, 0, 0, 1, 2, 2, 2, 3],
                        ['hor', 'ver', 'both', 'ver', 'hor', 'ver', 'both', 'hor'], 6)
 
+# ground collision
+sprites.add_collision(0, (0, 0, sprites.new_size, 10), (0, 10, 10, sprites.new_size-10))
+sprites.add_collision(1, (0, 0, sprites.new_size, 10))
+sprites.add_collision(2, (0, 0, 10, 10))
+sprites.add_collision(3, (0, 0, 10, sprites.new_size))
+sprites.add_collision(4)
+sprites.add_collision(5, (0, 0, sprites.new_size, sprites.new_size))
+sprites.add_collision(6, (0, 0, sprites.new_size, 10),
+                      (sprites.new_size - 10, 10, 10, sprites.new_size-10))
+sprites.add_collision(7, (0, 0, 10, sprites.new_size), (10, sprites.new_size-10, sprites.new_size-10, 10))
+sprites.add_collision(8, (sprites.new_size - 10, 0, 10, sprites.new_size),
+                      (0, sprites.new_size-10, sprites.new_size-10, 10))
+sprites.add_collision(9, (0, sprites.new_size-10, sprites.new_size, 10))
+sprites.add_collision(10, (sprites.new_size-10, 0, 10, 10))
+sprites.add_collision(11, (0, sprites.new_size-10, 10, 10))
+sprites.add_collision(12, (sprites.new_size-10, sprites.new_size-10, 10, 10))
+sprites.add_collision(13, (sprites.new_size-10, 0, 10, sprites.new_size))
+
 # OBJECTS - second layer
 sprites.make_group('tilesA', (0, 2), 'objectA', sprites_y=4)
 sprites.make_group('tilesB', (0, 0), 'objectB', sprites_x=3, sprites_y=3)
-sprites.make_group('tilesB', (4, 4), 'misc', sprites_x=3, sprites_y=2)
+sprites.make_group('tilesB', (4, 4), 'misc', sprites_x=4, sprites_y=2)
 
 
 # FULL IMAGES
