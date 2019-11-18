@@ -40,26 +40,33 @@ class Sprites(object):
         for x in rects:
             self.collision[name].append(x)
 
-    def make_group(self, spritesheet, pos, name, sprites_x=1, sprites_y=1):  # pos = ex. (2, 3), no single pixels
+    def make_group(self, spritesheet, pos, name, sprites_x=1, sprites_y=1, size=None):  # pos = ex. (2, 3), no single pixels
         # divide sprites on a sprite-sheet into groups of sprites that are easily accessible
         self.group_sizes[name] = sprites_x * sprites_y
 
+        # set size
+        if size is None:
+            size = self.size
+
         # making the group
-        new_group = pygame.Surface((self.size*sprites_x, self.size*sprites_y), pygame.HWSURFACE | pygame.SRCALPHA)
+        new_group = pygame.Surface((size*sprites_x, size*sprites_y), pygame.HWSURFACE | pygame.SRCALPHA)
         new_group.blit(self.spritesheets[spritesheet], (0, 0),
-                       (pos[0]*self.size, pos[1]*self.size,
-                        (pos[0]+sprites_x)*self.size, (pos[1]+sprites_y)*self.size))
+                       (pos[0]*size, pos[1]*size,
+                        (pos[0]+sprites_x)*size, (pos[1]+sprites_y)*size))
         self.groups[name] = new_group
 
         # splitting group into singular sprites and storing in self.sprites, also making bigger sprites
         x_spr = 0
         y_spr = 0
         for x in range(sprites_x * sprites_y):
-            new_sprite = pygame.Surface((self.size, self.size), pygame.HWSURFACE | pygame.SRCALPHA)
-            new_sprite.blit(new_group, (0, 0), (x_spr*self.size, y_spr*self.size,
-                                                (x_spr+1)*self.size, (y_spr+1)*self.size))
+            new_sprite = pygame.Surface((size, size), pygame.HWSURFACE | pygame.SRCALPHA)
+            new_sprite.blit(new_group, (0, 0), (x_spr*size, y_spr*size,
+                                                (x_spr+1)*size, (y_spr+1)*size))
             self.sprites[name+str(x)] = new_sprite
-            self.big_sprites[name+str(x)] = pygame.transform.scale(new_sprite, (sprites.new_size, sprites.new_size))
+            if size == self.size:
+                self.big_sprites[name+str(x)] = pygame.transform.scale(new_sprite, (sprites.new_size, sprites.new_size))
+            else:
+                self.big_sprites[name + str(x)] = pygame.transform.scale(new_sprite, (size*2, size*2))
             x_spr += 1
             if x_spr == sprites_x:
                 x_spr = 0
@@ -100,24 +107,34 @@ class Sprites(object):
 
 sprites = Sprites(32)
 
-# PLAYER SPRITES
+# upload spritesheets
+sprites.spritesheet('sprites/tiles1.png', 'tilesA')
+sprites.spritesheet('sprites/tilesfinal2.png', 'tilesB')
 sprites.spritesheet('sprites/player_spr.png', 'playerSPR')      # player sprite-sheet can be called with playerSPR
+sprites.spritesheet('sprites/frames.png', 'frames')
+sprites.spritesheet('sprites/enemies.png', 'enemies')
+
+# PLAYER SPRITES
 sprites.make_group('playerSPR', (0, 0), 'pig', sprites_y=4)
 sprites.make_group('playerSPR', (1, 0), 'lizard', sprites_y=4)
 sprites.make_group('playerSPR', (2, 0), 'cat', sprites_y=2)
 
+# ENEMIES
+sprites.make_group('enemies', (0, 0), 'ghost', sprites_y=4)
 
 # TILES
-# upload spritesheets
-sprites.spritesheet('sprites/tiles1.png', 'tilesA')
-sprites.spritesheet('sprites/tiles2.png', 'tilesB')
+
+# GATES
+sprites.make_group('tilesB', (3, 0), 'gate', sprites_x=4, sprites_y=2)
+sprites.flip_tiles('gate', [0, 4], ['hor', 'hor'], 8)
 
 # GROUNDS
 sprites.make_group('tilesA', (0, 0), 'groundA', sprites_x=3, sprites_y=2)
 sprites.make_group('tilesA', (3, 0), 'groundB', sprites_x=3, sprites_y=2)
-sprites.make_group('tilesB', (0, 4), 'groundC', sprites_x=3, sprites_y=2)
+sprites.make_group('tilesB', (0, 0), 'groundC', sprites_x=3, sprites_y=2)
+sprites.make_group('tilesB', (0, 2), 'groundD', sprites_x=3, sprites_y=2)
 
-for l in ['A', 'B', 'C']:
+for l in ['A', 'B', 'C', 'D']:
     sprites.flip_tiles('ground'+l, [0, 0, 0, 1, 2, 2, 2, 3],
                        ['hor', 'ver', 'both', 'ver', 'hor', 'ver', 'both', 'hor'], 6)
 
@@ -139,11 +156,20 @@ sprites.add_collision(11, (0, sprites.new_size-10, 10, 10))
 sprites.add_collision(12, (sprites.new_size-10, sprites.new_size-10, 10, 10))
 sprites.add_collision(13, (sprites.new_size-10, 0, 10, sprites.new_size))
 
-# OBJECTS - second layer
+# OBJECTS
 sprites.make_group('tilesA', (0, 2), 'objectA', sprites_y=4)
 sprites.make_group('tilesB', (0, 0), 'objectB', sprites_x=3, sprites_y=3)
-sprites.make_group('tilesB', (4, 4), 'misc', sprites_x=4, sprites_y=2)
+sprites.make_group('tilesB', (0, 4), 'hw', sprites_x=4, sprites_y=2)
+sprites.make_group('tilesB', (3, 2), 'xmas', sprites_x=4, sprites_y=2)
 
+# trees
+sprites.make_group('tilesB', (7, 0), 'treeA', sprites_y=2)
+sprites.make_group('tilesB', (9, 0), 'treeB', sprites_x=2, sprites_y=3)
+sprites.make_group('tilesB', (7, 2), 'treeC', sprites_x=2, sprites_y=4)
+sprites.make_group('tilesB', (9, 3), 'bush', sprites_x=2)
+
+# FRAMES
+sprites.make_group('frames', (0, 0), 'frame', sprites_x=2, size=250)
 
 # FULL IMAGES
-sprites.image('sprites/titlebg.png', 'title bg')
+sprites.image('sprites/titlescreen1.1.png', 'title bg')

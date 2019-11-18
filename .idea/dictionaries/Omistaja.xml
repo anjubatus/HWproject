@@ -2,6 +2,7 @@
   <dictionary name="Omistaja">
     <words>
       <w>bodytext</w>
+      <w>dirct</w>
     </words>
   </dictionary>
 </component>

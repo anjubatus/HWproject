@@ -57,27 +57,34 @@ while True:
 
         # UPDATE GAME
         game.update_game()
+
+        # enemies
+        for x in maps.all_maps[game.cur_map][2].values():
+            x.update('players')
+
+        # hard objects
+        for x in maps.all_maps[game.cur_map][3].values():
+            x.update()
+
+        maps.map_update()
         player_1.update()
         player_2.update()
-        maps.map_update()
 
         # D R A W
         # map
         # left screen
         game.map_screen1.blit(maps.all_maps[game.cur_map][0], (game.camera_x1, game.camera_y1))
-        game.map_screen1.blit(maps.second_layer[game.cur_map], (game.camera_x1, game.camera_y1))
 
         # right screen
         game.map_screen2.blit(maps.all_maps[game.cur_map][0], (game.camera_x2, game.camera_y2))
-        game.map_screen2.blit(maps.second_layer[game.cur_map], (game.camera_x2, game.camera_y2))
 
-        # ENEMIES
+        # enemies
         for x in maps.all_maps[game.cur_map][2].values():
-            x.update('players')
+            x.draw()
 
-        # HARD OBJECTS
+        # hard objects
         for x in maps.all_maps[game.cur_map][3].values():
-            x.update()
+            x.draw()
 
         # PLAYERS
 
@@ -111,6 +118,20 @@ while True:
             game.map_screen2.blit(p1,  # friend sprite
                                   (game.camera_x2 - game.camera_x1 + (250 - sprites.new_size / 2),
                                    game.camera_y2 - game.camera_y1 + (250 - sprites.new_size / 2)))
+
+        # layer 2
+        game.map_screen1.blit(maps.second_layer[game.cur_map], (game.camera_x1, game.camera_y1))
+        game.map_screen2.blit(maps.second_layer[game.cur_map], (game.camera_x2, game.camera_y2))
+
+        # frames
+        game.map_screen1.blit(sprites.big_sprites['frame0'], (0, 0))
+        game.map_screen2.blit(sprites.big_sprites['frame1'], (0, 0))
+
+        # health bars - first draw black background, then the actual health bar
+        game.map_screen1.blit(player_1.health_bg, (250 - player_1.health_bg.get_size()[0] / 2, 20))
+        game.map_screen2.blit(player_2.health_bg, (250 - player_1.health_bg.get_size()[0] / 2, 20))
+        game.map_screen1.blit(player_1.health_bar, (250-player_1.health_bg.get_size()[0]/2, 20))
+        game.map_screen2.blit(player_2.health_bar, (250-player_1.health_bg.get_size()[0]/2, 20))
 
         # blit on big screen
         screen.blit(game.map_screen1, (0, 0))
