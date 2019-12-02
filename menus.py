@@ -115,8 +115,8 @@ class Menu(object):
         self.header2_pos = header2_pos
         self.bodytext_pos = bodytext_pos
 
-    def on_use(self, text, header1_text=None, header2_text=None, buttons=None):
-        # buttons is a list of lists; one button = [
+    def main_menu(self, text, header1_text=None, header2_text=None):
+        # buttons is a list of lists; one button = []
         screen.blit(self.background, self.bg_pos)
 
         if header1_text is not None and self.header1_pos is not None:
@@ -126,10 +126,80 @@ class Menu(object):
 
         self.bodytext.text(text, self.bodytext_pos)
 
-        if buttons is not None:
-            for b in buttons:
-                if b[0] == 'gameplay':
-                    button.draw_button(b[1], text='PLAY', cur_mode='gameplay')
+        # buttons
+        button.draw_button((50, 250), text='PLAY', menu='switch menu')
+
+    def switch_menu(self):
+        screen.fill((0, 0, 0))
+
+        # choose between single and two-player
+        if game.switch['play_mode'] is None:
+            self.header1.text('Single player (WASD) or Two-Player (WASD + arrow keys)?', ('center', 100))
+            button.draw_button((100, 250), text='SINGLE', play_mode='single')
+            button.draw_button((-100, 250), text='TWO', play_mode='two')
+            button.draw_button((50, 50), text='< BACK', menu='main menu')
+        elif game.switch['play_mode'] == 'single':
+            if game.switch['player_1'] is None:
+                # choose character - SINGLE PLAYER
+                self.header1.text('Choose your character:', ('center', 100))
+
+                # IMAGES
+                screen.blit(sprites.size_sprites['pig0'], (100, 220))
+                screen.blit(sprites.size_sprites['lizard0'], (420, 220))
+                screen.blit(sprites.size_sprites['cat0'], (730, 220))
+
+                # BUTTONS
+                button.draw_button((150, 400), text='CHOOSE', player_1='pig')
+                button.draw_button(('center', 400), text='CHOOSE', player_1='lizard')
+                button.draw_button((-150, 400), text='CHOOSE', player_1='cat')
+                button.draw_button((50, 50), text='< BACK', menu='main menu')
+            else:
+                # characters and play mode has been selected, give play button
+                screen.blit(sprites.size_sprites[game.switch['player_1']+'0'], (420, 150))
+                button.draw_button(('center', 350), text='PLAY', cur_mode='gameplay')
+                button.draw_button((50, 50), text='< BACK', menu='main menu')
+
+        elif game.switch['play_mode'] == 'two':
+            # choose character - TWO PLAYER
+            if game.switch['player_1'] is None:
+                self.header1.text('Choose your character:', ('center', 70))
+                self.header2.text('PLAYER 1', ('center', 110))
+
+                # IMAGES
+                screen.blit(sprites.size_sprites['pig0'], (100, 220))
+                screen.blit(sprites.size_sprites['lizard0'], (420, 220))
+                screen.blit(sprites.size_sprites['cat0'], (730, 220))
+
+                # BUTTONS
+                button.draw_button((150, 400), text='CHOOSE', player_1='pig')
+                button.draw_button(('center', 400), text='CHOOSE', player_1='lizard')
+                button.draw_button((-150, 400), text='CHOOSE', player_1='cat')
+                button.draw_button((50, 50), text='< BACK', menu='main menu')
+            elif game.switch['player_2'] is None:
+                self.header1.text('Choose your character:', ('center', 70))
+                self.header2.text('PLAYER 2', ('center', 110))
+
+                # IMAGES
+                screen.blit(sprites.size_sprites['pig0'], (100, 220))
+                screen.blit(sprites.size_sprites['lizard0'], (420, 220))
+                screen.blit(sprites.size_sprites['cat0'], (730, 220))
+
+                # BUTTONS
+                if game.switch['player_1'] != 'pig':
+                    button.draw_button((150, 400), text='CHOOSE', player_2='pig')
+                if game.switch['player_1'] != 'lizard':
+                    button.draw_button(('center', 400), text='CHOOSE', player_2='lizard')
+                if game.switch['player_1'] != 'cat':
+                    button.draw_button((-150, 400), text='CHOOSE', player_2='cat')
+                button.draw_button((50, 50), text='< BACK', menu='main menu')
+            else:
+                # characters and play mode has been selected, give play button
+                self.header2.text('PLAYER 1', (200, 100))
+                self.header2.text('PLAYER 2', (-200, 100))
+                screen.blit(sprites.size_sprites[game.switch['player_1']+'0'], (150, 150))
+                screen.blit(sprites.size_sprites[game.switch['player_2'] + '0'], (680, 150))
+                button.draw_button(('center', 350), text='PLAY', cur_mode='gameplay')
+                button.draw_button((50, 50), text='< BACK', menu='main menu')
 
 
 # FONTS

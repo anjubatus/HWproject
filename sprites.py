@@ -16,6 +16,7 @@ class Sprites(object):
         self.group_sizes = {}
         self.sprites = {}
         self.big_sprites = {}
+        self.size_sprites = {}
 
         self.cycles = {}  # for animation; includes counter for cur. frame  'name': [counter, [frames]]
 
@@ -26,6 +27,10 @@ class Sprites(object):
 
     def image(self, a_file, name):
         self.images[name] = pygame.image.load(a_file)
+
+    def add_size_sprite(self, sprite_name, size_x, size_y):  # add sprites with unique proportions
+        self.size_sprites[sprite_name] = pygame.transform.scale(self.sprites[sprite_name],
+                                                                (size_x, size_y))
 
     def find_sprite(self, group_name, x, y):
         # find sprites from a group
@@ -109,18 +114,25 @@ sprites = Sprites(32)
 
 # upload spritesheets
 sprites.spritesheet('sprites/tiles1.png', 'tilesA')
-sprites.spritesheet('sprites/tilesfinal2.png', 'tilesB')
-sprites.spritesheet('sprites/player_spr.png', 'playerSPR')      # player sprite-sheet can be called with playerSPR
+sprites.spritesheet('sprites/tilesfinal3.png', 'tilesB')
+sprites.spritesheet('sprites/player_spr.png', 'playerSPR')  # player sprite-sheet can be called with playerSPR
 sprites.spritesheet('sprites/frames.png', 'frames')
-sprites.spritesheet('sprites/enemies.png', 'enemies')
+sprites.spritesheet('sprites/enemies.png', 'enemies0')
+sprites.spritesheet('sprites/enemies1.png', 'enemies1')
 
 # PLAYER SPRITES
-sprites.make_group('playerSPR', (0, 0), 'pig', sprites_y=4)
-sprites.make_group('playerSPR', (1, 0), 'lizard', sprites_y=4)
-sprites.make_group('playerSPR', (2, 0), 'cat', sprites_y=2)
+sprites.make_group('playerSPR', (0, 0), 'pig', sprites_y=12)
+sprites.make_group('playerSPR', (1, 0), 'lizard', sprites_y=12)
+sprites.make_group('playerSPR', (2, 0), 'cat', sprites_y=12)
+# big player sprites
+sprites.add_size_sprite('pig0', sprites.size*5, sprites.size*5)
+sprites.add_size_sprite('cat0', sprites.size*5, sprites.size*5)
+sprites.add_size_sprite('lizard0', sprites.size*5, sprites.size*5)
 
 # ENEMIES
-sprites.make_group('enemies', (0, 0), 'ghost', sprites_y=4)
+sprites.make_group('enemies0', (0, 0), 'ghost', sprites_y=4)
+sprites.make_group('enemies1', (0, 0), 'hatleg', sprites_y=12)
+sprites.make_group('enemies1', (1, 0), 'crawler', sprites_y=12)
 
 # TILES
 
@@ -161,6 +173,7 @@ sprites.make_group('tilesA', (0, 2), 'objectA', sprites_y=4)
 sprites.make_group('tilesB', (0, 0), 'objectB', sprites_x=3, sprites_y=3)
 sprites.make_group('tilesB', (0, 4), 'hw', sprites_x=4, sprites_y=2)
 sprites.make_group('tilesB', (3, 2), 'xmas', sprites_x=4, sprites_y=2)
+sprites.make_group('tilesB', (15, 4), 'misc', sprites_x=3, sprites_y=2)
 
 # trees
 sprites.make_group('tilesB', (7, 0), 'treeA', sprites_y=2)
@@ -168,8 +181,9 @@ sprites.make_group('tilesB', (9, 0), 'treeB', sprites_x=2, sprites_y=3)
 sprites.make_group('tilesB', (7, 2), 'treeC', sprites_x=2, sprites_y=4)
 sprites.make_group('tilesB', (9, 3), 'bush', sprites_x=2)
 
-# FRAMES
+# FRAMES ('picture' frames for the outline of the screensw
 sprites.make_group('frames', (0, 0), 'frame', sprites_x=2, size=250)
+sprites.make_group('frames', (0, 1), 'shade', size=250)
 
 # FULL IMAGES
-sprites.image('sprites/titlescreen1.1.png', 'title bg')
+sprites.image('sprites/titlescreen1.2.png', 'title bg')

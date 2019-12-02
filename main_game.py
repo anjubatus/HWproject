@@ -35,25 +35,57 @@ while True:
         # MOUSE CLICK
         if event.type == pygame.MOUSEBUTTONDOWN:
             game.clicked = True
-            print player_1.on_tile, player_1.collision.topleft
+            if game.switch['player_1'] is not None:
+                player_1.char = player_objs[game.switch['player_1']]
+            if game.switch['player_2'] is not None:
+                player_2.char = player_objs[game.switch['player_2']]
+            # print player_1.on_tile, player_1.collision.topleft
             # for x in Enemy.all_enemies.values():
             #   print x.placement
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_1:
+                print Maps.all_maps.keys()
 
     if game.switch['cur_mode'] == 'gameplay':   # Game mode is play
         # MOVEMENT
         pressed = pygame.key.get_pressed()
 
-        # player 1
-        game.move_press(pressed[pygame.K_w], 'w')
-        game.move_press(pressed[pygame.K_s], 's')
-        game.move_press(pressed[pygame.K_a], 'a')
-        game.move_press(pressed[pygame.K_d], 'd')
+        # sprint
+        if pressed[pygame.K_v]:  # player 1 uses sprint key
+            if player_1.sprint > 0:
+                player_1.sprint_in_use = True
+                if game.timer:
+                    player_1.sprint -= 1
+                if player_1.sprint == 0:
+                    player_1.sprint = -5
+            else:
+                player_1.sprint_in_use = False
+        else:
+            player_1.sprint_in_use = False
 
-        # player 2
-        game.move_press(pressed[pygame.K_UP], 'up', camera=2)
-        game.move_press(pressed[pygame.K_DOWN], 'down', camera=2)
-        game.move_press(pressed[pygame.K_LEFT], 'left', camera=2)
-        game.move_press(pressed[pygame.K_RIGHT], 'right', camera=2)
+        if pressed[pygame.K_m]:  # player 2 uses sprint key
+            if player_2.sprint > 0:
+                player_2.sprint_in_use = True
+                if game.timer:
+                    player_2.sprint -= 1
+                if player_2.sprint == 0:
+                    player_2.sprint = -5
+            else:
+                player_2.sprint_in_use = False
+        else:
+            player_2.sprint_in_use = False
+
+        # player 1 - walk
+        game.move_press(pressed[pygame.K_w], 'w', player_1.speed)
+        game.move_press(pressed[pygame.K_s], 's', player_1.speed)
+        game.move_press(pressed[pygame.K_a], 'a', player_1.speed)
+        game.move_press(pressed[pygame.K_d], 'd', player_1.speed)
+
+        # player 2 - walk
+        game.move_press(pressed[pygame.K_UP], 'up', player_2.speed, camera=2)
+        game.move_press(pressed[pygame.K_DOWN], 'down', player_2.speed, camera=2)
+        game.move_press(pressed[pygame.K_LEFT], 'left', player_2.speed, camera=2)
+        game.move_press(pressed[pygame.K_RIGHT], 'right', player_2.speed, camera=2)
 
         # UPDATE GAME
         game.update_game()
@@ -77,10 +109,6 @@ while True:
 
         # right screen
         game.map_screen2.blit(maps.all_maps[game.cur_map][0], (game.camera_x2, game.camera_y2))
-
-        # enemies
-        for x in maps.all_maps[game.cur_map][2].values():
-            x.draw()
 
         # hard objects
         for x in maps.all_maps[game.cur_map][3].values():
@@ -119,27 +147,34 @@ while True:
                                   (game.camera_x2 - game.camera_x1 + (250 - sprites.new_size / 2),
                                    game.camera_y2 - game.camera_y1 + (250 - sprites.new_size / 2)))
 
+        # enemies
+        for x in maps.all_maps[game.cur_map][2].values():
+            x.draw()
+
         # layer 2
         game.map_screen1.blit(maps.second_layer[game.cur_map], (game.camera_x1, game.camera_y1))
         game.map_screen2.blit(maps.second_layer[game.cur_map], (game.camera_x2, game.camera_y2))
 
-        # frames
+        # frames and shade
+        game.map_screen1.blit(sprites.big_sprites['shade0'], (0, 0))
+        game.map_screen2.blit(sprites.big_sprites['shade0'], (0, 0))
         game.map_screen1.blit(sprites.big_sprites['frame0'], (0, 0))
         game.map_screen2.blit(sprites.big_sprites['frame1'], (0, 0))
 
         # health bars - first draw black background, then the actual health bar
-        game.map_screen1.blit(player_1.health_bg, (250 - player_1.health_bg.get_size()[0] / 2, 20))
-        game.map_screen2.blit(player_2.health_bg, (250 - player_1.health_bg.get_size()[0] / 2, 20))
-        game.map_screen1.blit(player_1.health_bar, (250-player_1.health_bg.get_size()[0]/2, 20))
-        game.map_screen2.blit(player_2.health_bar, (250-player_1.health_bg.get_size()[0]/2, 20))
+        player_1.draw_bars()
+        player_2.draw_bars()
 
         # blit on big screen
         screen.blit(game.map_screen1, (0, 0))
         screen.blit(game.map_screen2, (500, 0))
 
-    elif game.switch['cur_mode'] == 'title screen':
-        title_screen.on_use('this is text', 'This is header 1', 'This is header 2',
-                            [['gameplay', (50, 250)]])
+    elif game.switch['cur_mode'] == 'menu':
+        if game.switch['menu'] == 'main menu':
+            title_screen.main_menu('this is text', 'This is header 1', 'This is header 2')
+            game.switch['play_mode'], game.switch['player_1'], game.switch['player_2'] = None, None, None
+        elif game.switch['menu'] == 'switch menu':
+            title_screen.switch_menu()
 
     # Last updates
     game.last_update()

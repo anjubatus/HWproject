@@ -96,7 +96,7 @@ class Maps(object):
 
     def new_map(self, name, starting_spot):
         # size of the map
-        size = (choice([21, 27]), choice([21, 27]))
+        size = (choice([27, 33]), choice([27, 33]))
 
         # the place where the players start on the map
         if starting_spot == 'down':
@@ -123,7 +123,7 @@ class Maps(object):
 
         # OBJECTS
         HardObj.all_hardobj.clear()
-        object_amount = randint(15, 30)   # how many objects spawn in
+        object_amount = randint(35, 50)   # how many objects spawn in
         objects = {}
         second_layer = {}
         for i in range(object_amount):
@@ -162,12 +162,20 @@ class Maps(object):
                            h.placement[1] + dirct[1] * sprites.new_size)
                     second_layer[len(second_layer)] = [Obj.all_obj[c], (-pos[0], -pos[1])]
 
-        # ENEMIES - test version TODO real enemies
+        # ENEMIES
         Enemy.all_enemies.clear()
-        enemy_test = {1: Enemy(ghost, placement=[sprites.new_size*randint(-size[0]+1, 0),
-                                                 sprites.new_size*randint(-size[1]+1, 0)]),
-                      2: Enemy(ghost, placement=[sprites.new_size*randint(-size[0]+1, 0),
-                                                 sprites.new_size*randint(-size[1]+1, 0)])}
+        map_enemies = {}
+        enemy_amount = randint(3, 7)
+        for e in range(enemy_amount):
+            if starting_spot == 'down':
+                pos = [sprites.new_size*randint(-size[0]+2, -1), sprites.new_size*randint(-size[1]+5, -1)]
+            elif starting_spot == 'up':
+                pos = [sprites.new_size * randint(-size[0] + 2, -1), sprites.new_size * randint(-size[1] + 2, -4)]
+            elif starting_spot == 'left':
+                pos = [sprites.new_size * randint(-size[0] + 2, -4), sprites.new_size * randint(-size[1] + 2, -1)]
+            else:
+                pos = [sprites.new_size * randint(-size[0] + 5, -1), sprites.new_size * randint(-size[1] + 2, -1)]
+            map_enemies[e] = Enemy(choice(enemy_objs.values()), placement=pos)
 
         # GROUNDS
         ground_spr_group = 'ground' + choice(['A', 'B', 'C', 'D'])
@@ -239,7 +247,7 @@ class Maps(object):
                     if not found:
                         map_groups[str(x)+':'+str(y)] = ['grass', pos]
 
-        if map_groups is not None:  # test version
+        if map_groups is not None:  # drawing map groups
             for x in map_groups.values():
                 the_map.blit(self.make_tile_group(x[0], ground_spr_group), x[1])
 
@@ -248,36 +256,67 @@ class Maps(object):
             layer_2.blit(i[0].cur_sprite, i[1])
 
         # save map
-        self.all_maps[name] = [the_map, size, enemy_test, objects, map_groups]
+        self.all_maps[name] = [the_map, size, map_enemies, objects, map_groups]
         self.second_layer[name] = layer_2
-        Game.all_maps[name] = [the_map, size, enemy_test, objects, map_groups]
+        Game.all_maps[name] = [the_map, size, map_enemies, objects, map_groups]
         Game.second_layer[name] = layer_2
 
     def load_map(self, name, starting_spot):
-        pass  # TODO load maps
+        print 'loading map...', name
+        size = self.all_maps[name][1]
+        self.current_map(name)
+
+        # the place where the players start on the map
+        if starting_spot == 'down':
+            start_pos = (size[0] / 2, size[1] - 2)
+        elif starting_spot == 'up':
+            start_pos = (size[0] / 2, 1)
+        elif starting_spot == 'left':
+            start_pos = (1, size[1] / 2)
+        else:
+            start_pos = (size[0] - 2, size[1] / 2)
+
+        # set cameras
+        game.camera_x1 = 0 - (start_pos[0] * sprites.new_size - (250 - sprites.new_size / 2))
+        game.camera_y1 = 0 - (start_pos[1] * sprites.new_size - (250 - sprites.new_size / 2))
+
+        game.camera_x2 = 0 - (start_pos[0] * sprites.new_size - (250 - sprites.new_size / 2))
+        game.camera_y2 = 0 - (start_pos[1] * sprites.new_size - (250 - sprites.new_size / 2))
 
     def map_update(self):
         # GAME BOUNDS / MOVING ONTO NEXT MAP
         if game.camera_x1 > 250 - game.sprite_size / 2:
             # game.camera_x1 = 250 - game.sprite_size / 2
-            n = randint(1, 10)
-            self.new_map(n, 'right')
-            self.current_map(n)
+            if choice(['new', 'load']) == 'new' or len(self.all_maps) < 3:
+                n = randint(1, 7)
+                self.new_map(n, 'right')
+                self.current_map(n)
+            else:
+                self.load_map(choice(self.all_maps.keys()), 'right')
         elif game.camera_x1 < (self.all_maps[game.cur_map][1][0] * game.sprite_size)*(-1) + 250 + game.sprite_size / 2:
             # game.camera_x1 = (self.all_maps[game.cur_map][1][0] * game.sprite_size)*(-1) + 250 + game.sprite_size / 2
-            n = randint(1, 10)
-            self.new_map(n, 'left')
-            self.current_map(n)
+            if choice(['new', 'load']) == 'new' or len(self.all_maps) < 3:
+                n = randint(1, 10)
+                self.new_map(n, 'left')
+                self.current_map(n)
+            else:
+                self.load_map(choice(self.all_maps.keys()), 'left')
         if game.camera_y1 > 250 - game.sprite_size / 2:
             # game.camera_y1 = 250 - game.sprite_size / 2
-            n = randint(1, 10)
-            self.new_map(n, 'down')
-            self.current_map(n)
+            if choice(['new', 'load']) == 'new' or len(self.all_maps) < 3:
+                n = randint(1, 10)
+                self.new_map(n, 'down')
+                self.current_map(n)
+            else:
+                self.load_map(choice(self.all_maps.keys()), 'down')
         elif game.camera_y1 < (self.all_maps[game.cur_map][1][1] * game.sprite_size)*(-1) + 250 + game.sprite_size / 2:
             # game.camera_y1 = (self.all_maps[game.cur_map][1][1] * game.sprite_size)*(-1) + 250 + game.sprite_size / 2
-            n = randint(1, 10)
-            self.new_map(n, 'up')
-            self.current_map(n)
+            if choice(['new', 'load']) == 'new' or len(self.all_maps) < 3:
+                n = randint(1, 10)
+                self.new_map(n, 'up')
+                self.current_map(n)
+            else:
+                self.load_map(choice(self.all_maps.keys()), 'up')
 
         if game.camera_x2 > 250 - game.sprite_size / 2:
             game.camera_x2 = 250 - game.sprite_size / 2
