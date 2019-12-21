@@ -1,4 +1,4 @@
 from distutils.core import setup
 import py2exe
 
-setup(console=['main_game.py'])
+setup(console=['cranberry_woodlands.py'])
