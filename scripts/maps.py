@@ -131,7 +131,6 @@ class Maps(object):
         # OBJECTS
         HardObj.all_hardobj.clear()
         object_amount = randint(45, 55)   # how many objects spawn in
-        item_amount = randint(1, 5)
         all_rand = [x for x in Obj.rand_pos]
         for o in all_rand:  # pick out snow map objects, and add or remove depending on if map is snow map
             if len(o) > 9:
@@ -163,7 +162,16 @@ class Maps(object):
             objects[pos] = HardObj(obj, placement=pos)
 
         # COLLECTIBLES
+        item_amount = randint(5, 15)
         Collectible.all_collectibles = []
+
+        # items to choose from
+        choices = ['Eyenion', 'Eyenion', 'Mushroom', 'Mushroom', 'Mushroom', 'Monkey Paw', 'Eyenion', 'Mushroom',
+                   'Monkey Paw']
+        for key in game.keys.keys():
+            if not game.keys[key]:
+                choices.append('Keypiece ' + str(key))
+
         for i in range(item_amount):
             loop = True
             pos = (0, 0)
@@ -177,15 +185,15 @@ class Maps(object):
                 if not found:
                     # if position is unique, continue
                     loop = False
-            obj = choice(Obj.collectibles)
+
+            obj = choice(choices)
             if obj in ['Keypiece 1', 'Keypiece 2', 'Keypiece 3']:
                 objects[pos] = Collectible(Obj.all_obj[obj], placement=pos, key=int(obj[-1]))
             else:
                 objects[pos] = Collectible(Obj.all_obj[obj], placement=pos)
 
         # FINAL GATE  - only appears after key pieces have been collected
-        # if game.keys[1] and game.keys[2] and game.keys[3]:
-        if True:
+        if game.keys[1] and game.keys[2] and game.keys[3]:
             gate = Obj.all_obj['Main Gate 0']  # chosen object
             loop = True
             pos = (0, 0)
@@ -358,6 +366,7 @@ class Maps(object):
         if self.cur_name != game.switch['cur_map']:
             self.new_map(game.switch['cur_map'], game.switch['start_point'])
             self.current_map(game.switch['cur_map'])
+            pygame.mixer.Sound.play(game.sounds['exit'])
 
         # removing collected items
         for x in self.all_maps[game.switch["cur_map"]][3].keys():
@@ -366,69 +375,95 @@ class Maps(object):
                 self.all_maps[game.switch["cur_map"]][3].pop(x)
 
         # GAME BOUNDS / MOVING ONTO NEXT MAP
-        if game.camera_x1 > 250 - game.sprite_size / 2:
-            # game.camera_x1 = 250 - game.sprite_size / 2
-            """if choice(['new', 'load']) == 'new' or len(self.all_maps) < 3:
-                n = randint(1, 7)
-                self.new_map(n, 'right')
-                self.current_map(n)
-            else:
-                self.load_map(choice(self.all_maps.keys()), 'right')"""
+        if game.camera_x1 > 250 - game.sprite_size / 2 - game.sprite_size and\
+                game.camera_x2 > 250 - game.sprite_size / 2 - game.sprite_size:
             n = randint(1, 7)
             game.fade_out = True
             game.waiting_commands['cur_map'] = n
             game.waiting_commands['start_point'] = 'right'
+
         elif game.camera_x1 < (self.all_maps[game.switch["cur_map"]][1][0] * game.sprite_size)*(-1) + 250\
-                + game.sprite_size / 2:
-            # game.camera_x1 = (self.all_maps[game.cur_map][1][0] * game.sprite_size)*(-1) + 250 + game.sprite_size / 2
-            """if choice(['new', 'load']) == 'new' or len(self.all_maps) < 3:
-                n = randint(1, 10)
-                self.new_map(n, 'left')
-                self.current_map(n)
-            else:
-                self.load_map(choice(self.all_maps.keys()), 'left')"""
+                + game.sprite_size / 2 + game.sprite_size and game.camera_x2 < \
+                (self.all_maps[game.switch["cur_map"]][1][0] * game.sprite_size)*(-1) + 250 + game.sprite_size / 2 \
+                + game.sprite_size:
             n = randint(1, 10)
             game.fade_out = True
             game.waiting_commands['cur_map'] = n
             game.waiting_commands['start_point'] = 'left'
-        if game.camera_y1 > 250 - game.sprite_size / 2:
-            # game.camera_y1 = 250 - game.sprite_size / 2
-            """if choice(['new', 'load']) == 'new' or len(self.all_maps) < 3:
-                n = randint(1, 10)
-                self.new_map(n, 'down')
-                self.current_map(n)
-            else:
-                self.load_map(choice(self.all_maps.keys()), 'down')"""
+        if game.camera_y1 > 250 - game.sprite_size / 2 - game.sprite_size and \
+                game.camera_y2 > 250 - game.sprite_size / 2 - game.sprite_size:
             n = randint(1, 10)
             game.fade_out = True
             game.waiting_commands['cur_map'] = n
             game.waiting_commands['start_point'] = 'down'
         elif game.camera_y1 < (self.all_maps[game.switch["cur_map"]][1][1] * game.sprite_size)*(-1) + 250\
-                + game.sprite_size / 2:
-            # game.camera_y1 = (self.all_maps[game.cur_map][1][1] * game.sprite_size)*(-1) + 250 + game.sprite_size / 2
-            """if choice(['new', 'load']) == 'new' or len(self.all_maps) < 3:
-                n = randint(1, 10)
-                self.new_map(n, 'up')
-                self.current_map(n)
-            else:
-                self.load_map(choice(self.all_maps.keys()), 'up')"""
+                + game.sprite_size / 2 + game.sprite_size and game.camera_y1 < \
+                (self.all_maps[game.switch["cur_map"]][1][1] * game.sprite_size)*(-1) + 250\
+                + game.sprite_size / 2 + game.sprite_size:
             n = randint(1, 10)
             game.fade_out = True
             game.waiting_commands['cur_map'] = n
             game.waiting_commands['start_point'] = 'up'
 
+        # Out of bounds
+        # PLAYER 1
+        if game.camera_x1 > 250 - game.sprite_size / 2:
+            game.camera_x1 = 250 - game.sprite_size / 2
+            if game.switch['play_mode'] == 'single':
+                n = randint(1, 7)
+                game.fade_out = True
+                game.waiting_commands['cur_map'] = n
+                game.waiting_commands['start_point'] = 'right'
+            else:
+                game.wait_for_player2 = True
+        elif game.camera_x1 < (self.all_maps[game.switch["cur_map"]][1][0] * game.sprite_size)*(-1) + 250\
+                + game.sprite_size / 2:
+            game.camera_x1 = (self.all_maps[game.switch["cur_map"]][1][0] * game.sprite_size) * (-1) + 250\
+                             + game.sprite_size / 2
+            if game.switch['play_mode'] == 'single':
+                n = randint(1, 7)
+                game.fade_out = True
+                game.waiting_commands['cur_map'] = n
+                game.waiting_commands['start_point'] = 'left'
+            else:
+                game.wait_for_player2 = True
+        if game.camera_y1 > 250 - game.sprite_size / 2:
+            game.camera_y1 = 250 - game.sprite_size / 2
+            if game.switch['play_mode'] == 'single':
+                n = randint(1, 7)
+                game.fade_out = True
+                game.waiting_commands['cur_map'] = n
+                game.waiting_commands['start_point'] = 'down'
+            else:
+                game.wait_for_player2 = True
+        elif game.camera_y1 < (self.all_maps[game.switch["cur_map"]][1][1] * game.sprite_size)*(-1) + 250\
+                + game.sprite_size / 2:
+            game.camera_y1 = (self.all_maps[game.switch["cur_map"]][1][1] * game.sprite_size) * (-1) + 250\
+                             + game.sprite_size / 2
+            if game.switch['play_mode'] == 'single':
+                n = randint(1, 7)
+                game.fade_out = True
+                game.waiting_commands['cur_map'] = n
+                game.waiting_commands['start_point'] = 'up'
+            else:
+                game.wait_for_player2 = True
+        # PLAYER 2
         if game.camera_x2 > 250 - game.sprite_size / 2:
             game.camera_x2 = 250 - game.sprite_size / 2
+            game.wait_for_player1 = True
         elif game.camera_x2 < (self.all_maps[game.switch["cur_map"]][1][0] * game.sprite_size)*(-1) + 250\
                 + game.sprite_size / 2:
             game.camera_x2 = (self.all_maps[game.switch["cur_map"]][1][0] * game.sprite_size) * (-1) + 250\
                              + game.sprite_size / 2
+            game.wait_for_player1 = True
         if game.camera_y2 > 250 - game.sprite_size / 2:
             game.camera_y2 = 250 - game.sprite_size / 2
+            game.wait_for_player1 = True
         elif game.camera_y2 < (self.all_maps[game.switch["cur_map"]][1][1] * game.sprite_size)*(-1) + 250\
                 + game.sprite_size / 2:
             game.camera_y2 = (self.all_maps[game.switch["cur_map"]][1][1] * game.sprite_size) * (-1) + 250\
                              + game.sprite_size / 2
+            game.wait_for_player1 = True
 
         # COLLISION with ground tiles and hard objects
         grounds = self.all_maps[game.switch["cur_map"]][4]  # the 'map groups' dictionary from the making of the map

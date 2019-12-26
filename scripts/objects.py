@@ -1,4 +1,5 @@
 from sprites import *
+from random import randint, choice
 
 
 class Obj(object):   # mostly sprite and animation cycle work
@@ -91,6 +92,12 @@ class Player(object):
         self.number = number   # - is this player 1 or 2
         self.items = {}
 
+        # ITEM effects
+        self.monkey_paw = False
+        self.monkey_paw_counter = 0
+        self.eyenion = False
+        self.eyenion_counter = 0
+
         # health
         self.health = self.health_modes['max']
         self.health_bar = pygame.Surface((3*self.health, 15))
@@ -163,6 +170,36 @@ class Player(object):
                 game.p2_dead = True
             return 'dead'
 
+    def restore_health(self):
+        amount = self.health_modes['max']/2
+        amount_sprint = self.health_modes['sprint max']/2
+        self.health += amount
+        self.sprint += amount_sprint
+        if self.health > self.health_modes['max']:
+            self.health = self.health_modes['max']
+        if self.sprint > self.health_modes['sprint max']:
+            self.sprint = self.health_modes['sprint max']
+
+    def monkey_paw_in_use(self):
+        if self.monkey_paw_counter > 50:
+            self.monkey_paw_counter = 50
+        if self.monkey_paw_counter > 0:
+            self.monkey_paw = True
+            if game.timer:
+                self.monkey_paw_counter -= 1
+        else:
+            self.monkey_paw = False
+
+    def eyenion_in_use(self):
+        if self.eyenion_counter > 50:
+            self.eyenion_counter = 50
+        if self.eyenion_counter > 0:
+            self.eyenion = True
+            if game.timer:
+                self.eyenion_counter -= 1
+        else:
+            self.eyenion = False
+
     def update(self):
         # updates if time is not stopped
         if not game.stop_time and not game.fade_out and not game.fade_in:
@@ -174,6 +211,10 @@ class Player(object):
                 self.speed = 4
             if game.timer and self.sprint < self.health_modes['sprint max'] and not self.sprint_in_use:
                 self.sprint += 1
+
+            # Monkey Paw and Eyenion -item effects
+            self.monkey_paw_in_use()
+            self.eyenion_in_use()
 
             # position/placement
             if self.number == 1 and not game.p1_dead:
@@ -200,21 +241,30 @@ class Player(object):
             for i in Enemy.all_enemies.values():
                 if self.number == 1:
                     if self.collision.colliderect(i.collision1) and self.health > 0:
-                        if game.timer:
+                        if game.timer and not self.monkey_paw:
                             self.health -= 1
+                            pygame.mixer.Sound.play(game.sounds['damage'])
+                            game.flash_out = True
+                        elif game.timer:
+                            pass  # TODO monkey paw defend sound
+
                 else:
                     if self.collision.colliderect(i.collision2) and self.health > 0:
-                        if game.timer:
+                        if game.timer and not self.monkey_paw:
                             self.health -= 1
+                            pygame.mixer.Sound.play(game.sounds['damage'])
+                            game.flash_out = True
+                        elif game.timer and self.monkey_paw:
+                            pygame.mixer.Sound.play(game.sounds['defense'])
 
             # Collectible collision
             for i in Collectible.all_collectibles:
                 if self.number == 1:
                     if self.collision.colliderect(i.collision1):
-                        i.collected()
+                        i.collected(self.number)
                 else:
                     if self.collision.colliderect(i.collision2):
-                        i.collected()
+                        i.collected(self.number)
 
             # Gate collision
             gate = Obj.gate
@@ -262,12 +312,21 @@ class Player(object):
             self.health_bar = pygame.Surface((3 * self.health, 15))
         else:
             self.health_bar = pygame.Surface((0, 0))
-        self.health_bar.fill(self.health_colors[self.determine_health()])
+        # determine health bar colour
+        if not self.monkey_paw:
+            self.health_bar.fill(self.health_colors[self.determine_health()])
+        else:
+            self.health_bar.fill((93, 204, 245))
+
         if self.sprint >= 0:
             self.sprint_bar = pygame.Surface((3 * self.sprint, 15))
         else:
             self.sprint_bar = pygame.Surface((0, 0))
-        self.sprint_bar.fill(self.health_colors['sprint'])
+
+        if not self.eyenion:
+            self.sprint_bar.fill(self.health_colors['sprint'])
+        else:
+            self.sprint_bar.fill((245, 172, 93))
 
         # draw health and sprint bars
         if self.number == 1:
@@ -421,15 +480,29 @@ class Enemy(object):
         # pygame.draw.rect(game.map_screen2, (0, 0, 0), self.collision2)
 
         # set goal
+        last_goal = self.goal
         if goal == 'players':
             distance = (0, 0)
-            for p in Player.all_players.values():
-                if abs(p.placement[0] - self.placement[0]) < 150 and abs(p.placement[1] - self.placement[1]) < 150:
-                    self.goal = p.placement
-                    distance = (abs(p.placement[0] - self.placement[0]), abs(p.placement[1] - self.placement[1]))
+            for p in [game.player_1, game.player_2]:
+                if (p == game.player_1 and not game.p1_dead) or (p == game.player_2 and not game.p2_dead):
+                    if abs(p.placement[0] - self.placement[0]) < 150 and abs(p.placement[1] - self.placement[1]) < 150:
+                        self.goal = p.placement
+                        distance = (abs(p.placement[0] - self.placement[0]), abs(p.placement[1] - self.placement[1]))
+                        # random sounds
+                        occasion = randint(0, 200)
+                        if occasion == 1:
+                            if self.char.name == 'Bat':  # bats will have unique squeak sounds
+                                pygame.mixer.Sound.play(game.sounds['squeak'])
+                            elif self.char.name != 'Ghost':
+                                pygame.mixer.Sound.play(game.sounds['grunt'])
+
             if distance is (0, 0):
                 self.goal = None
         self.movement()
+
+        # check if goal has changed, and monster noticed a player
+        if last_goal is None and self.goal is not None:
+            pygame.mixer.Sound.play(game.sounds['notice'])
 
     def draw(self):
         game.map_screen1.blit(self.cur_sprite,
@@ -517,14 +590,31 @@ class Collectible(object):
         game.map_screen2.blit(self.obj.sprite,
                               (game.camera_x2 - self.placement[0], game.camera_y2 - self.placement[1]))
 
-    def collected(self):
+    def collected(self, player_number):
         if self.key is not None and self.key in game.keys.keys() and not game.keys[self.key]:
             game.keys[self.key] = True
             game.keys_total += 1
             pygame.mixer.Sound.play(game.sounds['key'])
         else:
-            Player.inventory.append(self)
             pygame.mixer.Sound.play(game.sounds['item'])
+            # MUSHROOMS
+            if self.obj.name == 'Mushroom':
+                if player_number == 1:
+                    game.player_1.restore_health()
+                else:
+                    game.player_2.restore_health()
+            # MONKEY PAW
+            elif self.obj.name == 'Monkey Paw':
+                if player_number == 1:
+                    game.player_1.monkey_paw_counter = 50
+                else:
+                    game.player_2.monkey_paw_counter = 50
+            # MONKEY PAW
+            elif self.obj.name == 'Eyenion':
+                if player_number == 1:
+                    game.player_1.eyenion_counter = 50
+                else:
+                    game.player_2.eyenion_counter = 50
         self.all_collectibles.remove(self)
 
 
@@ -609,9 +699,9 @@ pumpkin_collision = (10, 5, sprites.new_size-20, sprites.new_size-5)
 mushroom = Obj('Mushroom', 'item0', collision=norm_collision, collectible=True)
 eyenion = Obj('Eyenion', 'item1', collision=norm_collision, collectible=True)
 monkey_paw = Obj('Monkey Paw', 'item2', collision=norm_collision, collectible=True)
-key_1 = Obj('Keypiece 1', 'item3', collision=norm_collision, collectible=True)
-key_2 = Obj('Keypiece 2', 'item4', collision=norm_collision, collectible=True)
-key_3 = Obj('Keypiece 3', 'item5', collision=norm_collision, collectible=True)
+key_1 = Obj('Keypiece 1', 'item4', collision=norm_collision, collectible=True)
+key_2 = Obj('Keypiece 2', 'item5', collision=norm_collision, collectible=True)
+key_3 = Obj('Keypiece 3', 'item6', collision=norm_collision, collectible=True)
 
 # OTHER objects
 # misc dictionary= name: [collision, sprite name]
@@ -664,8 +754,8 @@ treeA_1s = Obj('treeA14 (snow)', 'treeA14', rand_pos=True,
                collision=(10, -10, sprites.new_size-20, sprites.new_size-20))
 treeB_1 = Obj('treeB4 (no snow)', 'treeB4', rand_pos=True, collision=(0, -10, sprites.new_size, sprites.new_size+10))
 treeB_1s = Obj('treeB5 (snow)', 'treeB5', rand_pos=True, collision=(0, -10, sprites.new_size, sprites.new_size+10))
-treeC_1 = Obj('treeC8 (no snow)', 'treeC8', rand_pos=True, collision=(10, -10, sprites.new_size-20, sprites.new_size-20))
-treeC_1s = Obj('treeC10 (snow)', 'treeC10', rand_pos=True, collision=(10, -10, sprites.new_size-20, sprites.new_size-20))
+treeC_1 = Obj('treeC8 (no snow)', 'treeC8', rand_pos=True, collision=(30, -10, sprites.new_size, sprites.new_size-20))
+treeC_1s = Obj('treeC10 (snow)', 'treeC10', rand_pos=True, collision=(30, -10, sprites.new_size, sprites.new_size-20))
 treeD_1 = Obj('treeD8 (no snow)', 'treeD8', rand_pos=True, collision=None)
 treeD_1s = Obj('treeD10 (snow)', 'treeD10', rand_pos=True, collision=None)
 
@@ -710,9 +800,9 @@ treeA_2 = Obj('treeA13', 'treeA13', collision=(10, -10, sprites.new_size-20, spr
               cont=["treeA12 (no snow)", (-1, 0), 1])
 treeA_2s = Obj('treeA15', 'treeA15', collision=(10, -10, sprites.new_size-20, sprites.new_size-20),
                cont=["treeA14 (snow)", (-1, 0), 1])
-treeC_2 = Obj('treeC9', 'treeC9', collision=(10, -10, sprites.new_size-20, sprites.new_size-20),
+treeC_2 = Obj('treeC9', 'treeC9', collision=(0, -10, sprites.new_size-30, sprites.new_size-20),
               cont=["treeC8 (no snow)", (-1, 0), 1])
-treeC_2s = Obj('treeC11', 'treeC11', collision=(10, -10, sprites.new_size-20, sprites.new_size-20),
+treeC_2s = Obj('treeC11', 'treeC11', collision=(0, -10, sprites.new_size-30, sprites.new_size-20),
                cont=["treeC10 (snow)", (-1, 0), 1])
 treeD_2 = Obj('treeD9', 'treeD9', collision=(10, -10, sprites.new_size-20, sprites.new_size-20),
               cont=["treeD8 (no snow)", (-1, 0), 1])

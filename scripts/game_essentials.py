@@ -30,7 +30,20 @@ class Game(object):
 
     # sounds
     sounds = {'select': pygame.mixer.Sound('sounds/select1.wav'), 'key': pygame.mixer.Sound('sounds/bling.wav'),
-              'item': pygame.mixer.Sound('sounds/blip.wav')}
+              'item': pygame.mixer.Sound('sounds/blip.wav'), 'quit': pygame.mixer.Sound('sounds/quit.wav'),
+              'death': pygame.mixer.Sound('sounds/death.wav'), 'win': pygame.mixer.Sound('sounds/win.wav'),
+              'damage': pygame.mixer.Sound('sounds/auch.wav'), 'exit': pygame.mixer.Sound('sounds/exit.wav'),
+              'notice': pygame.mixer.Sound('sounds/jump.wav'), 'defense': pygame.mixer.Sound('sounds/defense.wav'),
+              'grunt': pygame.mixer.Sound('sounds/grunt.wav'), 'grunt2': pygame.mixer.Sound('sounds/grunt2.wav'),
+              'owl': pygame.mixer.Sound('sounds/owl.wav'), 'wind': pygame.mixer.Sound('sounds/wind.wav'),
+              'crickets': pygame.mixer.Sound('sounds/crickets.wav'), 'squeak': pygame.mixer.Sound('sounds/squeak.wav')}
+
+    for x in sounds.values():  # set volume lower
+        x.set_volume(0.5)
+    sounds['win'].set_volume(0.3)
+    sounds['exit'].set_volume(0.3)
+    sounds['key'].set_volume(0.3)
+    sounds['owl'].set_volume(0.7)
 
     # indicates how many pixels cameras are moving currently
     camera_1_move = [0, 0]
@@ -51,18 +64,27 @@ class Game(object):
     timer_2 = False
     stop_time = False
 
-    # fade ins and outs
+    # fade ins and outs, flashes
     fade_in = False
     fade_out = False
     fade_level = 0
     fade_screen = pygame.Surface((1000, 500), pygame.SRCALPHA)
-    waiting_commands = {}
+
+    flash_in = False
+    flash_out = False
+    flash_level = 0
+    flash_screen = pygame.Surface((1000, 500), pygame.SRCALPHA)
+
+    waiting_commands = {}  # will be executed in the middle of the fade/flash
 
     # maps
     map_class = None
     all_maps = {}  # Dictionary of all saved maps, copy from maps class
     second_layer = {}  # dictionary of saved maps' second layer
     map_size = (0, 0)
+
+    wait_for_player1 = False
+    wait_for_player2 = False
 
     # sprites
     sprite_size = 0
@@ -105,6 +127,8 @@ class Game(object):
         self.switch = new
 
     def death(self):
+        if self.switch['sounds_on']:
+            pygame.mixer.Sound.play(self.sounds['death'])
         self.fade_out = True
         self.waiting_commands['cur_mode'] = 'menu'
         self.waiting_commands['menu'] = 'death screen'
@@ -112,6 +136,7 @@ class Game(object):
 
     def gate_enter(self):
         if self.switch['gate_enter']:
+            pygame.mixer.Sound.play(self.sounds['win'])
             self.fade_out = True
             self.waiting_commands['cur_mode'] = 'menu'
             self.waiting_commands['menu'] = 'win screen'
@@ -144,8 +169,6 @@ class Game(object):
             self.stoptime()
             self.switch['stop_time'] = False
 
-        # game bounds moved to maps_update
-
         # check if players are not moving
         if True not in [self.pressing['up'], self.pressing['down'], self.pressing['left'], self.pressing['right']]:
             self.p2_move = None
@@ -164,7 +187,7 @@ class Game(object):
             self.stop_time = False
 
     def fade(self):
-        if self.fade_out:
+        if self.fade_out and not self.flash_in:
             self.fade_screen = pygame.Surface((1000, 500), pygame.SRCALPHA)
             self.fade_screen.fill((0, 0, 0, self.fade_level))
             self.fade_level += 10
@@ -188,6 +211,32 @@ class Game(object):
                 self.fade_level = 0
                 self.fade_out = False
                 self.fade_in = False
+
+    def flash(self):
+        if self.flash_out and not self.flash_in:
+            self.flash_screen = pygame.Surface((1000, 500), pygame.SRCALPHA)
+            self.flash_screen.fill((153, 48, 32, self.flash_level))
+            self.flash_level += 20
+            if self.flash_level > 100:
+                self.flash_level = 100
+                self.flash_out = False
+                self.flash_in = True
+                for x in self.waiting_commands.keys():
+                    if x == 'music' and self.switch['music'] is not None:
+                        pygame.mixer.music.fadeout(600)
+                    if x == 'music' and self.waiting_commands[x] is not None:
+                        pygame.mixer.music.load(self.waiting_commands[x])
+                        pygame.mixer.music.play(-1)
+                    game.switch[x] = game.waiting_commands[x]
+                game.waiting_commands.clear()
+        if self.flash_in:
+            self.flash_screen = pygame.Surface((1000, 500), pygame.SRCALPHA)
+            self.flash_screen.fill((153, 48, 32, self.flash_level))
+            self.flash_level -= 20
+            if self.flash_level < 0:
+                self.flash_level = 0
+                self.flash_out = False
+                self.flash_in = False
 
     def last_update(self):
         self.camera_2_move = [0, 0]
@@ -220,11 +269,8 @@ class Game(object):
                 # no_move = self.no_move_2
                 p_specs = {'U': 'up', 'D': 'down', 'L': 'left', 'R': 'right'}
 
-            """if True in no_move.values():
-                print 'shouldn\'t move now'"""
-
             # check if key is pressed -- the player is moving around.
-            if pressed:
+            if pressed and ((camera == 1 and not self.p1_dead) or (camera == 2 and not self.p2_dead)):
                 self.pressing[name] = True
 
                 if name == p_specs['U']:

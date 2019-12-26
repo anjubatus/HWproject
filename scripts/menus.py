@@ -68,6 +68,8 @@ class Button(object):
                     pygame.mixer.music.fadeout(600)
                 if key == 'music' and value is not None:
                     pygame.mixer.music.load(value)
+                    if value == "sounds/ingame_music.mp3":
+                        pygame.mixer.music.set_volume(0.5)
                     pygame.mixer.music.play(-1)
                 if key == 'cur_mode':
                     game.fade_out = True
@@ -79,7 +81,13 @@ class Button(object):
 
         # select sound
         if game.switch['sounds_on']:
-            pygame.mixer.Sound.play(game.sounds['select'])
+            if 'cur_mode' in values.keys() and 'menu' in values.keys():
+                if values['cur_mode'] == 'menu' and values['menu'] == 'main menu':
+                    pygame.mixer.Sound.play(game.sounds['quit'])
+                else:
+                    pygame.mixer.Sound.play(game.sounds['select'])
+            else:
+                pygame.mixer.Sound.play(game.sounds['select'])
 
 
 class Menu(object):
@@ -283,14 +291,25 @@ class Menu(object):
             button.draw_button(('center', 450), text='CONTINUE', menu='main menu', reset=True)
 
     def win_screen(self):
-        self.header1.text('YOU WON', ('center', 70))
-        self.header2.text('you got out of the woods!', ('center', 110))
-        if game.switch['music_on']:
-            button.draw_button(('center', 350), text='CONTINUE', menu='credits')
+        # background
+        if game.switch['play_mode'] == 'single':
+            screen.blit(sprites.images[game.player_1.char.name.lower() + '_art'], (500, 0))
         else:
-            button.draw_button(('center', 350), text='CONTINUE', menu='credits')
+            screen.blit(sprites.images[game.player_1.char.name.lower() + '_art'], (300, 0))
+            screen.blit(sprites.images[game.player_2.char.name.lower() + '_art'], (600, 0))
+
+        # text
+        self.header1.text('CONGRATULATIONS ! ! !', (30, 70))
+        self.header2.text('you got out of the woods!', (30, 110))
+        if game.switch['music_on']:
+            button.draw_button((30, 350), text='CONTINUE', menu='credits')
+        else:
+            button.draw_button((30, 350), text='CONTINUE', menu='credits')
 
     def death_screen(self):
+        # background
+        screen.blit(sprites.images['death'], (0, 0))
+
         self.header1.text('GAME OVER', ('center', 70))
         self.header2.text('your ghost will wander the forests from now on...', ('center', 110))
         if game.switch['music_on']:

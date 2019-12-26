@@ -25,6 +25,8 @@ while True:
     game.map_screen1.fill((0, 0, 0))
     game.map_screen2.fill((0, 0, 0))
     mouse.check_pos()
+    game.wait_for_player1 = False
+    game.wait_for_player2 = False
 
     # EVENTS
     for event in pygame.event.get():
@@ -44,8 +46,6 @@ while True:
                 player_2.char = player_objs[game.switch['player_2']]
 
         if event.type == pygame.KEYDOWN:
-            """if event.key == pygame.K_1:
-                game.stoptime()"""
             if event.key == pygame.K_SPACE:
                 if game.switch['play_mode'] == 'single' and game.player_1.ready_to_leave:
                     game.switch['gate_enter'] = True
@@ -63,10 +63,11 @@ while True:
             if pressed[pygame.K_m]:  # player uses sprint key
                 if player_1.sprint > 0:
                     player_1.sprint_in_use = True
-                    if game.timer:
-                        player_1.sprint -= 1
-                    if player_1.sprint == 0:
-                        player_1.sprint = -5
+                    if not player_1.eyenion:
+                        if game.timer:
+                            player_1.sprint -= 1
+                        if player_1.sprint == 0:
+                            player_1.sprint = -5
                 else:
                     player_1.sprint_in_use = False
             else:
@@ -102,6 +103,8 @@ while True:
                 x.draw()
 
             p1 = player_1.char.cur_sprite
+            shade = sprites.big_sprites['shadow0']
+            game.map_screen1.blit(shade, (250 - sprites.new_size / 2, 250 - sprites.new_size / 2))
             game.map_screen1.blit(p1, (250 - sprites.new_size / 2, 250 - sprites.new_size / 2))
 
             # enemies
@@ -128,10 +131,11 @@ while True:
             if pressed[pygame.K_v]:  # player 1 uses sprint key
                 if player_1.sprint > 0:
                     player_1.sprint_in_use = True
-                    if game.timer:
-                        player_1.sprint -= 1
-                    if player_1.sprint == 0:
-                        player_1.sprint = -5
+                    if not player_1.eyenion:
+                        if game.timer:
+                            player_1.sprint -= 1
+                        if player_1.sprint == 0:
+                            player_1.sprint = -5
                 else:
                     player_1.sprint_in_use = False
             else:
@@ -140,10 +144,11 @@ while True:
             if pressed[pygame.K_m]:  # player 2 uses sprint key
                 if player_2.sprint > 0:
                     player_2.sprint_in_use = True
-                    if game.timer:
-                        player_2.sprint -= 1
-                    if player_2.sprint == 0:
-                        player_2.sprint = -5
+                    if not player_2.eyenion:
+                        if game.timer:
+                            player_2.sprint -= 1
+                        if player_2.sprint == 0:
+                            player_2.sprint = -5
                 else:
                     player_2.sprint_in_use = False
             else:
@@ -196,51 +201,59 @@ while True:
             p2 = player_2.char.cur_sprite
             shade = sprites.big_sprites['shadow0']
             if game.camera_y1 <= game.camera_y2:
-                game.map_screen1.blit(shade,  # friend shade
-                                      (game.camera_x1 - game.camera_x2 + (250 - sprites.new_size / 2),
-                                       game.camera_y1 - game.camera_y2 + (250 - sprites.new_size / 2)))
+                if not game.p2_dead:
+                    game.map_screen1.blit(shade,  # friend shade
+                                         (game.camera_x1 - game.camera_x2 + (250 - sprites.new_size / 2),
+                                          game.camera_y1 - game.camera_y2 + (250 - sprites.new_size / 2)))
                 game.map_screen1.blit(shade,  # own shade
                                       (250 - sprites.new_size / 2, 250 - sprites.new_size / 2))
-                game.map_screen1.blit(p2,  # friend sprite
-                                      (game.camera_x1 - game.camera_x2 + (250 - sprites.new_size/2),
-                                       game.camera_y1 - game.camera_y2 + (250 - sprites.new_size/2)))
+                if not game.p2_dead:
+                    game.map_screen1.blit(p2,  # friend sprite
+                                          (game.camera_x1 - game.camera_x2 + (250 - sprites.new_size/2),
+                                           game.camera_y1 - game.camera_y2 + (250 - sprites.new_size/2)))
                 game.map_screen1.blit(p1,  # own sprite
                                       (250 - sprites.new_size / 2, 250 - sprites.new_size / 2))
             else:
                 game.map_screen1.blit(shade,  # own shade
                                       (250 - sprites.new_size / 2, 250 - sprites.new_size / 2))
-                game.map_screen1.blit(shade,  # friend shade
-                                      (game.camera_x1 - game.camera_x2 + (250 - sprites.new_size / 2),
-                                       game.camera_y1 - game.camera_y2 + (250 - sprites.new_size / 2)))
+                if not game.p2_dead:
+                    game.map_screen1.blit(shade,  # friend shade
+                                          (game.camera_x1 - game.camera_x2 + (250 - sprites.new_size / 2),
+                                           game.camera_y1 - game.camera_y2 + (250 - sprites.new_size / 2)))
                 game.map_screen1.blit(p1,  # own sprite
                                       (250 - sprites.new_size / 2, 250 - sprites.new_size / 2))
-                game.map_screen1.blit(p2,  # friend sprite
-                                      (game.camera_x1 - game.camera_x2 + (250 - sprites.new_size / 2),
-                                       game.camera_y1 - game.camera_y2 + (250 - sprites.new_size / 2)))
+                if not game.p2_dead:
+                    game.map_screen1.blit(p2,  # friend sprite
+                                          (game.camera_x1 - game.camera_x2 + (250 - sprites.new_size / 2),
+                                           game.camera_y1 - game.camera_y2 + (250 - sprites.new_size / 2)))
 
             # right screen
             if game.camera_y2 <= game.camera_y1:
-                game.map_screen2.blit(shade,  # friend shade
-                                      (game.camera_x2 - game.camera_x1 + (250 - sprites.new_size / 2),
-                                       game.camera_y2 - game.camera_y1 + (250 - sprites.new_size / 2)))
+                if not game.p1_dead:
+                    game.map_screen2.blit(shade,  # friend shade
+                                          (game.camera_x2 - game.camera_x1 + (250 - sprites.new_size / 2),
+                                           game.camera_y2 - game.camera_y1 + (250 - sprites.new_size / 2)))
                 game.map_screen2.blit(shade,  # own shade
                                       (250 - sprites.new_size / 2, 250 - sprites.new_size / 2))
-                game.map_screen2.blit(p1,  # friend sprite
-                                      (game.camera_x2 - game.camera_x1 + (250 - sprites.new_size / 2),
-                                       game.camera_y2 - game.camera_y1 + (250 - sprites.new_size / 2)))
+                if not game.p1_dead:
+                    game.map_screen2.blit(p1,  # friend sprite
+                                          (game.camera_x2 - game.camera_x1 + (250 - sprites.new_size / 2),
+                                           game.camera_y2 - game.camera_y1 + (250 - sprites.new_size / 2)))
                 game.map_screen2.blit(p2,  # own sprite
                                       (250-sprites.new_size/2, 250-sprites.new_size/2))
             else:
                 game.map_screen2.blit(shade,  # own shade
                                       (250 - sprites.new_size / 2, 250 - sprites.new_size / 2))
-                game.map_screen2.blit(shade,  # friend shade
-                                      (game.camera_x2 - game.camera_x1 + (250 - sprites.new_size / 2),
-                                       game.camera_y2 - game.camera_y1 + (250 - sprites.new_size / 2)))
+                if not game.p1_dead:
+                    game.map_screen2.blit(shade,  # friend shade
+                                          (game.camera_x2 - game.camera_x1 + (250 - sprites.new_size / 2),
+                                           game.camera_y2 - game.camera_y1 + (250 - sprites.new_size / 2)))
                 game.map_screen2.blit(p2,  # own sprite
                                       (250 - sprites.new_size / 2, 250 - sprites.new_size / 2))
-                game.map_screen2.blit(p1,  # friend sprite
-                                      (game.camera_x2 - game.camera_x1 + (250 - sprites.new_size / 2),
-                                       game.camera_y2 - game.camera_y1 + (250 - sprites.new_size / 2)))
+                if not game.p1_dead:
+                    game.map_screen2.blit(p1,  # friend sprite
+                                          (game.camera_x2 - game.camera_x1 + (250 - sprites.new_size / 2),
+                                           game.camera_y2 - game.camera_y1 + (250 - sprites.new_size / 2)))
 
             # enemies
             for x in maps.all_maps[game.switch["cur_map"]][2].values():
@@ -254,6 +267,18 @@ while True:
             player_1.draw_bars()
             player_2.draw_bars()
 
+            if game.p1_dead and not game.p2_dead:
+                game.map_screen1.blit(sprites.images['part death'], (0, 0))
+            if game.p2_dead and not game.p1_dead:
+                game.map_screen2.blit(sprites.images['part death'], (0, 0))
+
+            a = 1
+            # Wait for other player
+            if game.wait_for_player1:
+                font_1.text("wait for other player", (150, 400), where=game.map_screen2)
+            if game.wait_for_player2:
+                font_1.text("wait for other player", (150, 400), where=game.map_screen1)
+
             # blit on big screen
             screen.blit(game.map_screen1, (0, 0))
             screen.blit(game.map_screen2, (500, 0))
@@ -263,6 +288,12 @@ while True:
                 font_1.text("PRESS SPACE TO ENTER GATE", ('center', 200))
 
         # BOTH MODES
+        # random sounds
+        r_s = randint(0, 300)
+        if r_s == 1 and game.switch['sounds_on']:
+            sound = choice(['grunt2', 'owl', 'wind'])
+            pygame.mixer.Sound.play(game.sounds[sound])
+
         # draw collectibles / progress
         obj_class.draw_collected_items()
 
@@ -307,9 +338,11 @@ while True:
     # Last updates
     game.last_update()
 
-    # fades
+    # fades / flashes
     game.fade()
     screen.blit(game.fade_screen, (0, 0))
+    game.flash()
+    screen.blit(game.flash_screen, (0, 0))
 
     # END FRAME
     clock.tick(30)
